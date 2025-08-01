@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add User</title></head>
+<body>
+  <h1>Add a New User</h1>
+  <form action="/users" method="POST">
+    <label>Name: <input type="text" name="name" required></label><br>
+    <label>Email: <input type="email" name="email" required></label><br>
+    <button type="submit">Create User</button>
+  </form>
+  <a href="/users">← Back to User List</a>
+</body>
+</html>

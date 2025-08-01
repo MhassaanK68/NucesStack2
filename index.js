@@ -5,27 +5,36 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // for form data
 
-// Test DB connection
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views');
+
 sequelize.authenticate()
   .then(() => console.log('✅ Connected to MySQL'))
   .catch(err => console.error('❌ DB connection error:', err));
 
-// Sync DB
 sequelize.sync();
 
+// EJS route: list users
 app.get('/users', async (req, res) => {
   const users = await User.findAll();
-  res.json(users);
+  res.render('users/index', { users });
 });
 
+// EJS route: form to create user
+app.get('/users/new', (req, res) => {
+  res.render('users/new');
+});
+
+// Form handler
 app.post('/users', async (req, res) => {
   try {
     const { name, email } = req.body;
-    const newUser = await User.create({ name, email });
-    res.status(201).json(newUser);
+    await User.create({ name, email });
+    res.redirect('/users');
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).send('Error creating user: ' + err.message);
   }
 });
 
