@@ -3,10 +3,12 @@ const sequelize = require('./config/db');
 const User = require('./models/user');
 const lookupRoutes = require('./routes/lookup-routes')
 require('dotenv').config();
+const cors = require('cors')
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // for form data
+app.use(cors());
 
 // Error Logging Middleware
 app.use((err, req, res, next) => {
