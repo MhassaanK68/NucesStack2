@@ -33,7 +33,6 @@ app.get('/users', async (req, res) => {
   }
 });
 
-
 // EJS route: form to create user
 app.get('/users/new', (req, res) => {
   res.render('users/new');
