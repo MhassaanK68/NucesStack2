@@ -31,13 +31,25 @@ const createLookupRoute = (path, model) => {
   router.get(path, async (req, res) => {
     try {
       const items = await model.findAll();
-      res.json(items);
+
+      const dto = items.map(item => {
+        const keys = Object.keys(item.dataValues);
+        const [idField, textField] = keys;
+
+        return {
+          value: item[idField],
+          text: item[textField]
+        };
+      });
+
+      res.json(dto);
     } catch (error) {
       console.error(`Error fetching ${path}:`, error);
       res.status(500).json({ message: 'Internal Server Error' });
     }
   });
 };
+
 
 // Register lookup routes
 createLookupRoute('/durations', Duration);
