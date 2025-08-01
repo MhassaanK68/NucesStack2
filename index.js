@@ -1,6 +1,7 @@
 const express = require('express');
 const sequelize = require('./config/db');
 const User = require('./models/user');
+const lookupRoutes = require('./routes/lookup-routes')
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,8 @@ app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
   res.status(500).send('Internal Server Error');
 });
+
+app.use('/api/lookup', lookupRoutes);
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
