@@ -7,6 +7,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // for form data
 
+// Error Logging Middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err.stack);
+  res.status(500).send('Internal Server Error');
+});
+
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
@@ -18,9 +24,15 @@ sequelize.sync();
 
 // EJS route: list users
 app.get('/users', async (req, res) => {
-  const users = await User.findAll();
-  res.render('users/index', { users });
+  try {
+    const users = await User.findAll();
+    res.render('users/index', { users });
+  } catch (err) {
+    console.error('Error in GET /users:', err);
+    res.status(500).send('Error loading users');
+  }
 });
+
 
 // EJS route: form to create user
 app.get('/users/new', (req, res) => {
