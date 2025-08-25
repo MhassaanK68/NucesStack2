@@ -1,5 +1,9 @@
 const express = require('express');
 const sequelize = require('./config/db');
+
+const initModels = require("./models/init-models");
+const models = initModels(sequelize);
+
 require('dotenv').config();
 const cors = require('cors')
 
@@ -17,11 +21,11 @@ app.use((err, req, res, next) => {
 });
 
 
-// sequelize.authenticate()
-//   .then(() => console.log('✅ Connected to MySQL'))
-//   .catch(err => console.error('❌ DB connection error:', err));
+sequelize.authenticate()
+  .then(() => console.log('✅ Connected to MySQL'))
+  .catch(err => console.error('❌ DB connection error:', err));
 
-// sequelize.sync();
+sequelize.sync();
 
 app.get('/', (req, res) => {
   res.render('index.ejs');
@@ -31,9 +35,29 @@ app.get('/admin', (req, res) => {
   res.render('admin.ejs');
 })
 
-app.get('/semester', (req, res) => {
-  res.render('semester.ejs');
-})
+// Assuming you have a Sequelize model named Subject
+// and it has a column 'semester' that matches the query param
+
+app.get('/semester', async (req, res) => {
+  try {
+    const { semester } = req.query; 
+
+    if (!semester) {
+      return res.status(400).send('Semester not specified');
+    }
+
+    // Fetch subjects for this semester
+    const subjects = await models.subjects.findAll({
+      where: { semester: semester }
+    });
+
+    // Render with subjects passed to the view
+    res.render('semester.ejs', { semester: semester, subjects });
+  } catch (err) {
+    console.error('Error fetching subjects:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 app.get('/subject', (req, res) => {
   res.render('subject.ejs');
