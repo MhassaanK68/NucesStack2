@@ -17,11 +17,11 @@ app.use((err, req, res, next) => {
 });
 
 
-sequelize.authenticate()
-  .then(() => console.log('✅ Connected to MySQL'))
-  .catch(err => console.error('❌ DB connection error:', err));
+// sequelize.authenticate()
+//   .then(() => console.log('✅ Connected to MySQL'))
+//   .catch(err => console.error('❌ DB connection error:', err));
 
-sequelize.sync();
+// sequelize.sync();
 
 app.get('/', (req, res) => {
   res.render('index');
