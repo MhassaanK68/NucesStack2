@@ -24,8 +24,19 @@ app.use((err, req, res, next) => {
 // sequelize.sync();
 
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index.ejs');
 })
 
+app.get('/admin', (req, res) => {
+  res.render('admin.ejs');
+})
+
+app.get('/semester', (req, res) => {
+  res.render('semester.ejs');
+})
+
+app.get('/subject', (req, res) => {
+  res.render('subject.ejs');
+})
 
 app.listen(3000, () => console.log('🚀 Server running on port 3000'));
