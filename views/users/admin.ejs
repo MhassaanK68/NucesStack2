@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Upload - University Notes Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <a href="index.html">University Notes Hub</a>
+                </h1>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            Semesters
+                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            <div class="py-1">
+                                <a href="semester.html?sem=1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 1</a>
+                                <a href="semester.html?sem=2" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 2</a>
+                                <a href="semester.html?sem=3" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 3</a>
+                                <a href="semester.html?sem=4" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 4</a>
+                                <a href="semester.html?sem=5" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 5</a>
+                                <a href="semester.html?sem=6" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 6</a>
+                                <a href="semester.html?sem=7" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 7</a>
+                                <a href="semester.html?sem=8" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 8</a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="admin.html" class="text-blue-600 font-medium">Admin Upload</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <nav class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="index.html" class="text-blue-600 hover:text-blue-800">Home</a>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-gray-700">Admin Upload</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Upload Study Materials</h2>
+                <p class="text-gray-600">Add new notes and study materials for students to access</p>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <form class="space-y-6">
+                    <!-- Title -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                            Title <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter the title of the study material"
+                        >
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Provide a brief description of the content"
+                        ></textarea>
+                    </div>
+
+                    <!-- Semester Selection -->
+                    <div>
+                        <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">
+                            Semester <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="semester"
+                            name="semester"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Select Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+
+                    <!-- Subject Selection -->
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
+                            Subject <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="subject"
+                            name="subject"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Select Subject</option>
+                            <option value="mathematics">Mathematics</option>
+                            <option value="physics">Physics</option>
+                            <option value="chemistry">Chemistry</option>
+                            <option value="computer-science">Computer Science</option>
+                            <option value="english">English</option>
+                            <option value="engineering-drawing">Engineering Drawing</option>
+                            <option value="mechanical-engineering">Mechanical Engineering</option>
+                            <option value="electrical-engineering">Electrical Engineering</option>
+                            <option value="civil-engineering">Civil Engineering</option>
+                            <option value="electronics">Electronics</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div>
+                        <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload PDF <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Upload a file</span>
+                                        <input id="file" name="file" type="file" accept=".pdf" required class="sr-only">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PDF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Author/Instructor -->
+                    <div>
+                        <label for="author" class="block text-sm font-medium text-gray-700 mb-2">
+                            Author/Instructor
+                        </label>
+                        <input
+                            type="text"
+                            id="author"
+                            name="author"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter author or instructor name"
+                        >
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end space-x-4">
+                        <button
+                            type="button"
+                            class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                            Upload Material
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recent Uploads -->
+            <div class="mt-12">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">Recent Uploads</h3>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-lg font-medium text-gray-900">Upload History</h4>
+                            <span class="text-sm text-gray-500">Last 10 uploads</span>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <div class="px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h5 class="font-medium text-gray-900">Quantum Physics Introduction</h5>
+                                <p class="text-sm text-gray-500">Physics • Semester 1 • 2 hours ago</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Published
+                            </span>
+                        </div>
+                        <div class="px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h5 class="font-medium text-gray-900">Calculus Fundamentals</h5>
+                                <p class="text-sm text-gray-500">Mathematics • Semester 1 • 1 day ago</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Published
+                            </span>
+                        </div>
+                        <div class="px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h5 class="font-medium text-gray-900">Organic Chemistry Basics</h5>
+                                <p class="text-sm text-gray-500">Chemistry • Semester 2 • 3 days ago</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2024 University Notes Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // File upload handling
+        const fileInput = document.getElementById('file');
+        const fileLabel = fileInput.parentElement;
+        
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                fileLabel.querySelector('span').textContent = fileName;
+            }
+        });
+
+        // Form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Upload functionality would be implemented with backend integration');
+        });
+    </script>
+</body>
+</html>

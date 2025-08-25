@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Notes - University Notes Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <a href="index.html">University Notes Hub</a>
+                </h1>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+                            Semesters
+                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            <div class="py-1">
+                                <a href="semester.html?sem=1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 1</a>
+                                <a href="semester.html?sem=2" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 2</a>
+                                <a href="semester.html?sem=3" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 3</a>
+                                <a href="semester.html?sem=4" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 4</a>
+                                <a href="semester.html?sem=5" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 5</a>
+                                <a href="semester.html?sem=6" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 6</a>
+                                <a href="semester.html?sem=7" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 7</a>
+                                <a href="semester.html?sem=8" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 8</a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="admin.html" class="text-gray-700 hover:text-blue-600 font-medium">Admin Upload</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <nav class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="index.html" class="text-blue-600 hover:text-blue-800">Home</a>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <a href="semester.html?sem=1" class="text-blue-600 hover:text-blue-800">Semester 1</a>
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-gray-700" id="subject-breadcrumb">Physics</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="subject-title">Physics Notes</h2>
+                <p class="text-gray-600">Download comprehensive study materials and notes</p>
+            </div>
+
+            <!-- Notes List -->
+            <div class="space-y-6">
+                <!-- Note 1 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900">Mechanics and Motion</h3>
+                            </div>
+                            <p class="text-gray-600 mb-4">Comprehensive notes covering Newton's laws, kinematics, and dynamics. Includes solved examples and practice problems.</p>
+                            <div class="flex items-center text-sm text-gray-500 space-x-4">
+                                <span>📄 25 pages</span>
+                                <span>📅 Updated: Dec 2024</span>
+                                <span>👤 Prof. Johnson</span>
+                            </div>
+                        </div>
+                        <div class="ml-6 flex space-x-2">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                Download
+                            </button>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note 2 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900">Thermodynamics Fundamentals</h3>
+                            </div>
+                            <p class="text-gray-600 mb-4">Complete guide to thermodynamic processes, heat engines, and entropy. Perfect for exam preparation.</p>
+                            <div class="flex items-center text-sm text-gray-500 space-x-4">
+                                <span>📄 32 pages</span>
+                                <span>📅 Updated: Nov 2024</span>
+                                <span>👤 Dr. Smith</span>
+                            </div>
+                        </div>
+                        <div class="ml-6 flex space-x-2">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                Download
+                            </button>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note 3 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900">Electromagnetic Theory</h3>
+                            </div>
+                            <p class="text-gray-600 mb-4">Detailed explanation of electric and magnetic fields, Maxwell's equations, and electromagnetic waves.</p>
+                            <div class="flex items-center text-sm text-gray-500 space-x-4">
+                                <span>📄 28 pages</span>
+                                <span>📅 Updated: Oct 2024</span>
+                                <span>👤 Prof. Wilson</span>
+                            </div>
+                        </div>
+                        <div class="ml-6 flex space-x-2">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                Download
+                            </button>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note 4 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <h3 class="text-xl font-semibold text-gray-900">Quantum Physics Introduction</h3>
+                            </div>
+                            <p class="text-gray-600 mb-4">Basic concepts of quantum mechanics, wave-particle duality, and Schrödinger equation with examples.</p>
+                            <div class="flex items-center text-sm text-gray-500 space-x-4">
+                                <span>📄 35 pages</span>
+                                <span>📅 Updated: Sep 2024</span>
+                                <span>👤 Dr. Brown</span>
+                            </div>
+                        </div>
+                        <div class="ml-6 flex space-x-2">
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                Download
+                            </button>
+                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2024 University Notes Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Get subject from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const subject = urlParams.get('subject') || 'physics';
+        
+        // Capitalize first letter of each word
+        const subjectTitle = subject.split('-').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        // Update page title and breadcrumb
+        document.getElementById('subject-title').textContent = `${subjectTitle} Notes`;
+        document.getElementById('subject-breadcrumb').textContent = subjectTitle;
+        document.title = `${subjectTitle} Notes - University Notes Hub`;
+    </script>
+</body>
+</html>
