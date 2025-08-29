@@ -1,0 +1,11 @@
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bg-primary{
+            background-color: #E9F4FC;
+        }
+
+        .color-primary {
+            color: #5FA4DD;
+        }

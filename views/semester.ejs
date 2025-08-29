@@ -1,54 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semester Subjects - Nuces Stack!</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <h1 class="text-2xl font-bold text-gray-900">
-                    <a href="/">Nuces Stack!</a>
-                </h1>
-                
-                <!-- Navigation -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="/" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
-                    <div class="relative group">
-                        <button class="text-blue-600 font-medium flex items-center">
-                            Semesters 
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                            <div class="py-1">
-                                <a href="semester?semester=1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 1</a>
-                                <a href="semester?semester=2" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 2</a>
-                                <a href="semester?semester=3" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 3</a>
-                                <a href="semester?semester=4" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 4</a>
-                                <a href="semester?semester=5" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 5</a>
-                                <a href="semester?semester=6" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 6</a>
-                                <a href="semester?semester=7" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 7</a>
-                                <a href="semester?semester=8" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 8</a>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="admin" class="text-gray-700 hover:text-blue-600 font-medium">Admin Upload</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+<%- include('partials/header') %>
 
     <!-- Breadcrumb -->
-    <nav class="bg-white border-b">
+    <nav class="my-2">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div class="flex items-center space-x-2 text-sm">
-                <a href="/" class="text-blue-600 hover:text-blue-800">Home</a>
+                <a href="/" class="text-gray-500 hover:[&]:color-primary">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="home" class="w-4 h-4"></i>
+                        Home
+                    </span>
+                </a>
                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -57,47 +18,50 @@
         </div>
     </nav>
 
+
+
+
     <!-- Main Content -->
-    <main class="py-8">
+    <main class="my-2">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="semester-title">Semester <%= semester %> Subjects</h2>
-                <p class="text-gray-600">Select a subject to view available notes and study materials</p>
+            <div class="text-start mb-4">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="semester-title">Semester <%= semester %> Subjects
+                </h2>
             </div>
 
             <!-- Subjects Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-                <% subjects.forEach(subject => { %>
-                    <a href="subject?subject=<%= subject.id %>" 
-                    class="block bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group">
-                    
-                    <!-- Subject Title -->
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        <%= subject.title %>
-                    </h3>
-                    
-                    <!-- Description -->
-                    <p class="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3">
-                        <%= subject.description || "Explore notes and resources curated for this subject." %>
-                    </p>
-                    
-                    <!-- Footer -->
-                    <div class="flex items-center text-blue-600 font-medium text-sm">
-                        <span>View Notes</span>
-                        <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" 
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
+                <% subjects.forEach(subject=> { %>
+                    <a href="subject?subject=<%= subject.id %>"
+                        class="block bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group">
+
+                        <!-- Subject Title -->
+                        <h3
+                            class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                            <%= subject.title %>
+                        </h3>
+
+                        <!-- Description -->
+                        <p class="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                            <%= subject.description || "Explore notes and resources curated for this subject." %>
+                        </p>
+
+                        <!-- Footer -->
+                        <div class="flex items-center text-blue-600 font-medium text-sm">
+                            <span>View Notes</span>
+                            <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
+                            </svg>
+                        </div>
                     </a>
 
-                <% }) %>
-                
+                    <% }) %>
+
             </div>
         </div>
     </main>
 
-</body>
-</html>
+    <%- include('partials/footer') %>

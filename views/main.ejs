@@ -1,65 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('partials/header') %>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nuces Notes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            
-        }
-
-        .bg-primary{
-            background-color: #E9F4FC;
-        }
-
-        .color-primary {
-            color: #5FA4DD;
-        }
-    </style>
-</head>
-
-<body class="font-body bg-primary antialiased">
-    <div class="relative flex min-h-screen flex-col">
-        <!-- Header -->
-        <header
-            class="sticky top-0 z-50 w-full border-b border-gray-300 color-primary bg-primary backdrop-blur">
-            <div class="container mx-auto flex h-14 items-center px-4">
-                <a class="flex items-center gap-2 font-bold text-lg mr-6" href="/">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 color-primary" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path d="M2 16V4a2 2 0 0 1 2-2h11"></path>
-                        <path
-                            d="M22 18H11a2 2 0 1 0 0 4h10.5a.5.5 0 0 0 .5-.5v-15a.5.5 0 0 0-.5-.5H11a2 2 0 0 0-2 2v12">
-                        </path>
-                        <path d="M5 14H4a2 2 0 1 0 0 4h1"></path>
-                    </svg>
-                    <span class="font-headline">Nuces Notes</span>
-                </a>
-                <div class="flex flex-1 items-center justify-end">
-                    <nav class="flex items-center">
-                        <a href="/admin">
-                            <button
-                                class="text-black bg-primary inline-flex items-center gap-2 text-sm font-medium border border-gray-300 hover:bg-gray-100 h-9 rounded-md px-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <circle cx="18" cy="15" r="3"></circle>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M10 15H6a4 4 0 0 0-4 4v2"></path>
-                                </svg>
-                                Admin Panel
-                            </button>
-                        </a>
-                    </nav>
-                </div>
-            </div>
-        </header>
 
         <!-- Main -->
         <main class="flex-1">
@@ -67,7 +7,7 @@
             <section class="py-12 md:py-20 lg:py-24">
                 <div class="container mx-auto text-center px-4">
                     <h1 class="font-headline text-4xl font-bold tracking-tight color-primary sm:text-5xl md:text-6xl">
-                        Welcome to Nuces Notes
+                        Welcome to Nuces Stack
                     </h1>
                     <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600 sm:text-xl">
                         Your centralized repository for all course materials. Select a semester to begin.
@@ -262,7 +202,6 @@
                 </div>
             </section>
         </main>
-    </div>
-</body>
 
-</html>
+
+<%- include('partials/footer') %>
