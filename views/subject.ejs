@@ -194,19 +194,7 @@
     </footer>
 
     <script>
-        // Get subject from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const subject = urlParams.get('subject') || 'physics';
-        
-        // Capitalize first letter of each word
-        const subjectTitle = subject.split('-').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-        
-        // Update page title and breadcrumb
-        document.getElementById('subject-title').textContent = `${subjectTitle} Notes`;
-        document.getElementById('subject-breadcrumb').textContent = subjectTitle;
-        document.title = `${subjectTitle} Notes - Nuces Stack!`;
+
     </script>
 </body>
 </html>

@@ -28,15 +28,20 @@ sequelize.authenticate()
 sequelize.sync();
 
 app.get('/', (req, res) => {
-  res.render('index.ejs');
+  res.render('main.ejs');
 })
 
 app.get('/admin', (req, res) => {
+  if (!req.user){
+    res.redirect("/login");
+    return
+  }
   res.render('admin.ejs');
 })
 
-// Assuming you have a Sequelize model named Subject
-// and it has a column 'semester' that matches the query param
+app.get('/login', (req, res) => {
+  res.render('login.ejs');
+})
 
 app.get('/semester', async (req, res) => {
   try {
@@ -46,12 +51,10 @@ app.get('/semester', async (req, res) => {
       return res.status(400).send('Semester not specified');
     }
 
-    // Fetch subjects for this semester
     const subjects = await models.subjects.findAll({
       where: { semester: semester }
     });
 
-    // Render with subjects passed to the view
     res.render('semester.ejs', { semester: semester, subjects });
   } catch (err) {
     console.error('Error fetching subjects:', err);
@@ -62,5 +65,7 @@ app.get('/semester', async (req, res) => {
 app.get('/subject', (req, res) => {
   res.render('subject.ejs');
 })
+
+
 
 app.listen(3000, () => console.log('🚀 Server running on port 3000'));
