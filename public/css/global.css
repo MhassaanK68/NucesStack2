@@ -9,3 +9,12 @@
         .color-primary {
             color: #5FA4DD;
         }
+
+        .bg-color-primary {
+            background-color: #5FA4DD;
+            color: white;
+        }
+
+        .bg-color-light-primary {
+            background-color: #a0bfd8;
+        }

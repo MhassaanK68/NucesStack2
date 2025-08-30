@@ -1,200 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subject Notes - Nuces Stack!</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <h1 class="text-2xl font-bold text-gray-900">
-                    <a href="/">Nuces Stack!</a>
-                </h1>
-                
-                <!-- Navigation -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="/" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
-                    <div class="relative group">
-                        <button class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
-                            Semesters
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                            <div class="py-1">
-                                <a href="semester?semester=1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 1</a>
-                                <a href="semester?semester=2" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 2</a>
-                                <a href="semester?semester=3" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 3</a>
-                                <a href="semester?semester=4" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 4</a>
-                                <a href="semester?semester=5" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 5</a>
-                                <a href="semester?semester=6" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 6</a>
-                                <a href="semester?semester=7" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 7</a>
-                                <a href="semester?semester=8" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 8</a>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="admin" class="text-gray-700 hover:text-blue-600 font-medium">Admin Upload</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+<%- include('partials/header') %>
 
+  <main class="container mx-auto px-4 py-8">
     <!-- Breadcrumb -->
-    <nav class="bg-white border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex items-center space-x-2 text-sm">
-                <a href="/" class="text-blue-600 hover:text-blue-800">Home</a>
-                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <a href="semester?semester=1" class="text-blue-600 hover:text-blue-800">Semester 1</a>
-                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <span class="text-gray-700" id="subject-breadcrumb">Physics</span>
-            </div>
-        </div>
+    <nav aria-label="Breadcrumb" class="flex flex-wrap items-center space-x-2 text-sm text-gray-500 mb-8">
+      <a href="/" class="hover:text-blue-600 flex items-center gap-1">
+        <i data-lucide="home" class="w-4 h-4"></i> Home
+      </a>
+      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      <a href="/semester?semester=1" class="hover:text-blue-600">Semester 1</a>
+      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      <span class="font-medium text-gray-900">Introduction to Programming</span>
     </nav>
 
-    <!-- Main Content -->
-    <main class="py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="subject-title">Physics Notes</h2>
-                <p class="text-gray-600">Download comprehensive study materials and notes</p>
-            </div>
+    <!-- Subject Title -->
+    <div class="mb-8">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-blue-600">
+        Introduction to Programming
+      </h1>
+      <p class="mt-2 text-lg text-gray-600">Select a chapter to view course materials.</p>
+    </div>
 
-            <!-- Notes List -->
-            <div class="space-y-6">
-                <!-- Note 1 -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                                <h3 class="text-xl font-semibold text-gray-900">Mechanics and Motion</h3>
-                            </div>
-                            <p class="text-gray-600 mb-4">Comprehensive notes covering Newton's laws, kinematics, and dynamics. Includes solved examples and practice problems.</p>
-                            <div class="flex items-center text-sm text-gray-500 space-x-4">
-                                <span>📄 25 pages</span>
-                                <span>📅 Updated: Dec 2024</span>
-                                <span>👤 Prof. Johnson</span>
-                            </div>
-                        </div>
-                        <div class="ml-6 flex space-x-2">
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Download
-                            </button>
-                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
-                                View
-                            </button>
-                        </div>
-                    </div>
-                </div>
+    <!-- Search -->
+    <div class="mb-8 max-w-lg">
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"></i>
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search for a chapter..."
+          class="w-full pl-10 pr-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
 
-                <!-- Note 2 -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                                <h3 class="text-xl font-semibold text-gray-900">Thermodynamics Fundamentals</h3>
-                            </div>
-                            <p class="text-gray-600 mb-4">Complete guide to thermodynamic processes, heat engines, and entropy. Perfect for exam preparation.</p>
-                            <div class="flex items-center text-sm text-gray-500 space-x-4">
-                                <span>📄 32 pages</span>
-                                <span>📅 Updated: Nov 2024</span>
-                                <span>👤 Dr. Smith</span>
-                            </div>
-                        </div>
-                        <div class="ml-6 flex space-x-2">
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Download
-                            </button>
-                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
-                                View
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Note 3 -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                                <h3 class="text-xl font-semibold text-gray-900">Electromagnetic Theory</h3>
-                            </div>
-                            <p class="text-gray-600 mb-4">Detailed explanation of electric and magnetic fields, Maxwell's equations, and electromagnetic waves.</p>
-                            <div class="flex items-center text-sm text-gray-500 space-x-4">
-                                <span>📄 28 pages</span>
-                                <span>📅 Updated: Oct 2024</span>
-                                <span>👤 Prof. Wilson</span>
-                            </div>
-                        </div>
-                        <div class="ml-6 flex space-x-2">
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Download
-                            </button>
-                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
-                                View
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Note 4 -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                                </svg>
-                                <h3 class="text-xl font-semibold text-gray-900">Quantum Physics Introduction</h3>
-                            </div>
-                            <p class="text-gray-600 mb-4">Basic concepts of quantum mechanics, wave-particle duality, and Schrödinger equation with examples.</p>
-                            <div class="flex items-center text-sm text-gray-500 space-x-4">
-                                <span>📄 35 pages</span>
-                                <span>📅 Updated: Sep 2024</span>
-                                <span>👤 Dr. Brown</span>
-                            </div>
-                        </div>
-                        <div class="ml-6 flex space-x-2">
-                            <button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Download
-                            </button>
-                            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors">
-                                View
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Chapters Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Chapter Card -->
+      <div class="chapter-card rounded-lg border bg-white shadow-sm flex flex-col transition hover:shadow-lg hover:border-blue-400 hover:-translate-y-1 duration-200">
+        <div class="flex-grow p-6">
+          <h2 class="chapter-title text-lg font-semibold text-gray-900">Basics of Programming</h2>
+          <div class="flex items-center gap-4 pt-2">
+            <span class="flex items-center gap-1 text-xs text-gray-500">
+              <i data-lucide="video" class="w-4 h-4 text-blue-500"></i> 2 Videos
+            </span>
+            <span class="flex items-center gap-1 text-xs text-gray-500">
+              <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> 3 Notes
+            </span>
+          </div>
         </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p>&copy; 2024 Nuces Stack!. All rights reserved.</p>
+        <div class="flex flex-col items-stretch space-y-2 p-6 border-t">
+          <a href="#videos" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
+            <i data-lucide="external-link" class="mr-2 h-4 w-4"></i>
+            Watch Videos
+          </a>
+          <a href="#notes" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md border bg-gray-100 text-gray-700 hover:bg-gray-200">
+            <i data-lucide="file-text" class="mr-2 h-4 w-4"></i>
+            View Notes
+          </a>
         </div>
-    </footer>
+      </div>
 
-    <script>
+      <!-- Another Chapter (No materials) -->
+      <div class="chapter-card rounded-lg border bg-white shadow-sm flex flex-col transition hover:shadow-lg hover:border-blue-400 hover:-translate-y-1 duration-200">
+        <div class="flex-grow p-6">
+          <h2 class="chapter-title text-lg font-semibold text-gray-900">Control Structures</h2>
+          <div class="flex items-center gap-4 pt-2">
+            <span class="flex items-center gap-1 text-xs text-gray-500">
+              <i data-lucide="video" class="w-4 h-4 text-blue-500"></i> 0 Videos
+            </span>
+            <span class="flex items-center gap-1 text-xs text-gray-500">
+              <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> 0 Notes
+            </span>
+          </div>
+        </div>
+        <div class="flex flex-col items-stretch space-y-2 p-6 border-t">
+          <button disabled class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-500 cursor-not-allowed">
+            No Materials
+          </button>
+        </div>
+      </div>
+    </div>
 
-    </script>
-</body>
-</html>
+
+    <div id="noResults" class="hidden col-span-full text-center py-16 border-2 border-dashed rounded-lg">
+      <h3 class="text-xl font-semibold text-gray-900">No Chapters Found</h3>
+      <p class="text-gray-500 mt-2">Try adjusting your search query.</p>
+    </div>
+
+  </main>
+
+  
+  <script>
+    lucide.createIcons();
+
+    const searchInput = document.getElementById("searchInput");
+    const chapters = document.querySelectorAll(".chapter-card");
+    const noResults = document.getElementById("noResults");
+
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase().trim();
+      let visibleCount = 0;
+
+      chapters.forEach(card => {
+        const title = card.querySelector(".chapter-title").textContent.toLowerCase();
+        if (title.includes(query)) {
+          card.classList.remove("hidden");
+          visibleCount++;
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+
+      noResults.classList.toggle("hidden", visibleCount > 0);
+    });
+  </script>
+
+
+
+
+    <%- include('partials/footer') %>
