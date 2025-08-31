@@ -1,9 +1,11 @@
 var DataTypes = require("sequelize").DataTypes;
+var _admins = require("./admins");
 var _notes = require("./notes");
 var _semesters = require("./semesters");
 var _subjects = require("./subjects");
 
 function initModels(sequelize) {
+  var admins = _admins(sequelize, DataTypes);
   var notes = _notes(sequelize, DataTypes);
   var semesters = _semesters(sequelize, DataTypes);
   var subjects = _subjects(sequelize, DataTypes);
@@ -16,6 +18,7 @@ function initModels(sequelize) {
   subjects.hasMany(notes, { as: "notes", foreignKey: "subject_id"});
 
   return {
+    admins,
     notes,
     semesters,
     subjects,
