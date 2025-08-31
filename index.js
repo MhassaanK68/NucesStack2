@@ -1,5 +1,7 @@
 const express = require('express');
 const sequelize = require('./config/db');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
 
 const initModels = require("./models/init-models");
 const models = initModels(sequelize);
@@ -16,6 +18,17 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'nucesstack',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false, // Set to true if using HTTPS
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
 // Error Logging Middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
@@ -27,7 +40,7 @@ sequelize.authenticate()
   .then(() => console.log('✅ Connected to MySQL'))
   .catch(err => console.error('❌ DB connection error:', err));
 
-sequelize.sync();
+
 
 app.get('/', async (req, res) => {
 
@@ -36,7 +49,7 @@ app.get('/', async (req, res) => {
 })
 
 app.get('/admin', (req, res) => {
-  if (!req.user){
+  if (!req.session.user){
     res.redirect("/login");
     return
   }
@@ -45,6 +58,60 @@ app.get('/admin', (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login.ejs');
+})
+
+// POST login endpoint
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).render('login.ejs', { 
+        error: 'Email and password are required' 
+      });
+    }
+
+    // Find admin by username (using email field as username)
+    const admin = await models.admins.findOne({
+      where: { username: email }
+    });
+
+    if (!admin) {
+      return res.status(401).render('login.ejs', { 
+        error: 'Invalid credentials' 
+      });
+    }
+
+    // Compare password (assuming plain text for now - should be hashed in production)
+    if (admin.password !== password) {
+      return res.status(401).render('login.ejs', { 
+        error: 'Invalid credentials' 
+      });
+    }
+
+    // Set session
+    req.session.user = {
+      id: admin.id,
+      username: admin.username
+    };
+
+    res.redirect('/admin');
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).render('login.ejs', { 
+      error: 'Login failed. Please try again.' 
+    });
+  }
+})
+
+// Logout endpoint
+app.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+    }
+    res.redirect('/login');
+  });
 })
 
 // Specific Semester Page
@@ -119,6 +186,21 @@ app.get('/view-notes', (req, res)=>{
   const { id } = req.query;
   res.render('content-viewer.ejs', {document: id})
 })
+
+// API Routes for Admin Panel
+
+// Import admin controller
+const adminController = require('./controllers/adminController');
+
+// Admin API routes
+app.get('/api/semesters', adminController.getSemesters);
+app.get('/api/subjects', adminController.getSubjects);
+app.post('/api/subjects', adminController.addSubject);
+app.delete('/api/subjects/:id', adminController.deleteSubject);
+app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
+app.post('/api/notes', adminController.addNote);
+app.delete('/api/notes/:id', adminController.deleteNote);
+
 
 app.use((req, res, next) => {
   res.status(404).render('not-found.ejs');

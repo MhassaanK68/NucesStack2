@@ -12,10 +12,10 @@ function initModels(sequelize) {
 
   notes.belongsTo(semesters, { as: "semester", foreignKey: "semester_id"});
   semesters.hasMany(notes, { as: "notes", foreignKey: "semester_id"});
-  subjects.belongsTo(semesters, { as: "semester", foreignKey: "semester_id"});
-  semesters.hasMany(subjects, { as: "subjects", foreignKey: "semester_id"});
   notes.belongsTo(subjects, { as: "subject", foreignKey: "subject_id"});
   subjects.hasMany(notes, { as: "notes", foreignKey: "subject_id"});
+  subjects.belongsTo(semesters, { as: "semester", foreignKey: "semester_id"});
+  semesters.hasMany(subjects, { as: "subjects", foreignKey: "semester_id"});
 
   return {
     admins,
