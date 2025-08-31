@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,578 +14,343 @@
 
 <body class="font-sans bg-gradient-to-br from-blue-50 to-indigo-100 antialiased">
 
-<style>
-    .font-body { font-family: 'Inter', sans-serif; }
-    .font-headline { font-family: 'Inter', sans-serif; font-weight: 800; }
-    
-    .pdf-container {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .pdf-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-        pointer-events: none;
-    }
-    
-    .glass-effect {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 
-            0 25px 50px -12px rgba(0, 0, 0, 0.15),
-            0 0 0 1px rgba(255, 255, 255, 0.1);
-    }
-    
-    .pdf-frame {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px;
-        overflow: hidden;
-        transform-origin: center;
-    }
-    
-    .control-btn {
-        transition: all 0.2s ease;
-        backdrop-filter: blur(10px);
-    }
-    
-    .control-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    }
-    
-    .control-btn:active {
-        transform: translateY(0);
-    }
-    
-    .floating-controls {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        z-index: 10;
-    }
-    
-    .mobile-controls {
-        position: fixed;
-        bottom: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 20;
-    }
-    
-    .status-indicator {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        z-index: 10;
-    }
-    
-    @keyframes pulse-subtle {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    
-    .pulse-subtle {
-        animation: pulse-subtle 2s infinite;
-    }
-    
-    .zoom-controls {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 12px;
-        padding: 0.5rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-    
-    .zoom-display {
-        min-width: 60px;
-        text-align: center;
-        font-weight: 600;
-        font-size: 0.875rem;
-        color: #374151;
-    }
-    
-    /* Responsive iframe container */
-    .pdf-iframe-container {
-        position: relative;
-        width: 100%;
-        height: 70vh;
-        min-height: 400px;
-        max-height: 800px;
-    }
-    
-    @media (max-width: 768px) {
-        .pdf-iframe-container {
-            height: 60vh;
-            min-height: 350px;
+    <style>
+        .font-body {
+            font-family: 'Inter', sans-serif;
         }
-        
-        .floating-controls {
-            display: none;
-        }
-        
-        .glass-effect {
-            margin: 0.5rem;
-            padding: 1rem;
-        }
-    }
-    
-    @media (max-width: 640px) {
-        .pdf-iframe-container {
-            height: 55vh;
-            min-height: 300px;
-        }
-    }
-    
-    /* Fullscreen styles */
-    .fullscreen-mode {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 9999 !important;
-        margin: 0 !important;
-        border-radius: 0 !important;
-    }
-    
-    .fullscreen-mode .pdf-iframe-container {
-        height: calc(100vh - 120px) !important;
-        max-height: none !important;
-    }
-</style>
 
-<div class="relative flex min-h-screen flex-col pdf-container">
-     <!-- Main Content  -->
-    <main class="flex-1 relative">
-        <div class="flex items-center justify-center min-h-screen p-2 sm:p-4 lg:p-6">
-            <div class="w-full max-w-7xl">
-                
-                 <!-- Enhanced PDF Viewer  -->
-                <div id="pdf-viewer" class="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative">
-                    
-                     <!-- Header Section  -->
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-white"></i>
-                            </div>
-                            <div>
-                                <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Document Viewer</h1>
-                                <p class="text-sm text-gray-600 hidden sm:block">Enhanced PDF viewing experience</p>
-                            </div>
-                        </div>
-                        
-                         <!-- Desktop Quick Actions  -->
-                        <div class="hidden sm:flex items-center gap-2 lg:gap-3">
-                            <button onclick="refreshPDF()" class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
-                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                <span class="hidden lg:inline">Refresh</span>
-                            </button>
-                            <button onclick="toggleFullscreen()" class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
-                                <i data-lucide="expand" class="w-4 h-4"></i>
-                                <span class="hidden lg:inline">Fullscreen</span>
-                            </button>
-                            <button onclick="openInNewTab()" class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
-                                <i data-lucide="external-link" class="w-4 h-4"></i>
-                                <span class="hidden lg:inline">Open</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                     <!-- PDF Container  -->
-                    <div class="relative">
-                         <!-- Loader  -->
-                        <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-gray-50/95 backdrop-blur-sm z-20 rounded-2xl">
-                            <div class="text-center">
-                                <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full mb-4">
-                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
+        .font-headline {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+        }
+
+        .pdf-container {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pdf-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .pdf-frame {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            overflow: hidden;
+            transform-origin: center;
+        }
+
+        .control-btn {
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .floating-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10;
+        }
+
+        .mobile-controls {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            z-index: 10;
+        }
+
+        @keyframes pulse-subtle {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .pulse-subtle {
+            animation: pulse-subtle 2s infinite;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 0.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .zoom-display {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        /* Responsive iframe container */
+        .pdf-iframe-container {
+            position: relative;
+            width: 100%;
+            height: 80vh;
+            min-height: 400px;
+            max-height: 800px;
+        }
+
+        @media (max-width: 768px) {
+            .pdf-iframe-container {
+                height: 80vh;
+                min-height: 350px;
+            }
+
+            .floating-controls {
+                display: none;
+            }
+
+            .glass-effect {
+                margin: 0.5rem;
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .pdf-iframe-container {
+                height: 75vh;
+                min-height: 300px;
+            }
+        }
+
+        /* Fullscreen styles */
+        .fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 50 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .fullscreen-mode .pdf-iframe-container {
+            height: calc(100vh - 120px) !important;
+            max-height: none !important;
+        }
+
+        /* Mobile Fullscreen Fix */
+        @media (max-width: 768px) {
+            .fullscreen-mode {
+                padding: 0 !important;
+                /* remove any padding around PDF */
+                margin: 0 !important;
+            }
+
+            .fullscreen-mode .pdf-iframe-container {
+                width: 100vw !important;
+                height: 100vh !important;
+                /* full viewport height */
+                max-height: 100vh !important;
+            }
+
+            .pdf-frame {
+                transform: none !important;
+                /* remove scaling on mobile */
+                border-radius: 0 !important;
+                /* full screen corners */
+            }
+
+            #pdf-iframe {
+                width: 100% !important;
+                height: 100% !important;
+            }
+        }
+    </style>
+
+    <div class="relative flex min-h-screen flex-col pdf-container">
+        <!-- Main Content  -->
+        <main class="flex-1 relative">
+            <div class="flex items-start justify-center sm:items-center p-2">
+                <div class="w-full max-w-7xl">
+
+                    <!-- Enhanced PDF Viewer  -->
+                    <div id="pdf-viewer" class="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative">
+
+                        <!-- Header Section  -->
+                        <div id="doc-view-header"
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+                            <div class="flex items-center gap-3 sm:gap-4">
+                                <div
+                                    class="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
+                                    <i data-lucide="file-text" class="w-5 h-5 text-white"></i>
                                 </div>
-                                <p class="text-gray-600 font-medium text-sm sm:text-base">Loading document...</p>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-1">Please wait while we prepare your PDF</p>
+                                <div>
+                                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Document Viewer</h1>
+                                </div>
                             </div>
-                        </div>
-                        
-                         <!-- Desktop Floating Controls  -->
-                        <div class="floating-controls flex flex-col gap-2">
-                            <div class="zoom-controls flex-col">
-                                <button onclick="zoomIn()" class="control-btn bg-white/90 hover:bg-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg border border-white/30 mb-1">
-                                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
+
+                            <!-- Desktop Quick Actions  -->
+                            <div class="hidden sm:flex items-center gap-2 lg:gap-3">
+                                <button onclick="refreshPDF()"
+                                    class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                    <span class="hidden lg:inline">Refresh</span>
                                 </button>
-                                <div class="zoom-display text-xs">
-                                    <span id="zoom-level">100%</span>
-                                </div>
-                                <button onclick="zoomOut()" class="control-btn bg-white/90 hover:bg-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg border border-white/30 mt-1">
-                                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                                <button onclick="toggleFullscreen()"
+                                    class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
+                                    <i data-lucide="expand" class="w-4 h-4"></i>
+                                    <span class="hidden lg:inline">Fullscreen</span>
                                 </button>
                             </div>
-                            <button onclick="downloadPDF()" class="control-btn bg-white/90 hover:bg-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center shadow-lg border border-white/30 mt-2">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                            </button>
                         </div>
-                        
-                         <!-- Status Indicator  -->
-                        <div class="status-indicator hidden sm:block">
-                            <div class="bg-white/90 backdrop-blur-sm rounded-full px-3 py-2 flex items-center gap-2 shadow-lg border border-white/30">
-                                <div class="w-2 h-2 bg-green-500 rounded-full pulse-subtle"></div>
-                                <span class="text-xs font-medium text-gray-700">Live Document</span>
+
+                        <!-- PDF Container  -->
+                        <div class="relative">
+                            <!-- Loader  -->
+                            <div id="loading-overlay"
+                                class="absolute inset-0 flex items-center justify-center bg-gray-50/95 backdrop-blur-sm z-20 rounded-2xl">
+                                <div class="text-center">
+                                    <div
+                                        class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full mb-4">
+                                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 animate-spin"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-600 font-medium text-sm sm:text-base">Loading document...</p>
+                                    <p class="text-xs sm:text-sm text-gray-500 mt-1">Please wait while we prepare your
+                                        PDF</p>
+                                </div>
+                            </div>
+
+
+
+                            <!-- Status Indicator  -->
+                            <div class="status-indicator hidden sm:block">
+                                <div
+                                    class="bg-white/90 backdrop-blur-sm rounded-full px-3 py-2 flex items-center gap-2 shadow-lg border border-white/30">
+                                    <div class="w-2 h-2 bg-green-500 rounded-full pulse-subtle"></div>
+                                    <span class="text-xs font-medium text-gray-700">Live Document</span>
+                                </div>
+                            </div>
+
+                            <!-- Enhanced PDF Frame  -->
+                            <div class="pdf-frame bg-white relative group">
+                                <div class="pdf-iframe-container">
+                                    <iframe id="pdf-iframe"
+                                        src="https://drive.google.com/file/d/1mAK5f8V9G9E-xq0PjxjUjFd-TlDFzYhE/preview"
+                                        class="w-full h-full border-0 rounded-2xl" onload="hideLoading()"
+                                        onerror="showError()" allow="autoplay"
+                                        sandbox="allow-same-origin allow-scripts">
+                                    </iframe>
+                                </div>
+
+                                <!-- Gradient Overlay for Better Integration  -->
+                                <div class="absolute inset-0 rounded-2xl pointer-events-none"
+                                    style="background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 3%, transparent 97%, rgba(0,0,0,0.02) 100%);">
+                                </div>
                             </div>
                         </div>
-                        
-                         <!-- Enhanced PDF Frame  -->
-                        <div class="pdf-frame bg-white relative group">
-                            <div class="pdf-iframe-container">
-                                <iframe 
-                                    id="pdf-iframe"
-                                    src="https://drive.google.com/file/d/1mAK5f8V9G9E-xq0PjxjUjFd-TlDFzYhE/preview" 
-                                    class="w-full h-full border-0 rounded-2xl"
-                                    onload="hideLoading()"
-                                    onerror="showError()"
-                                    allow="autoplay">
-                                </iframe>
-                            </div>
-                            
-                             <!-- Gradient Overlay for Better Integration  -->
-                            <div class="absolute inset-0 rounded-2xl pointer-events-none" style="background: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, transparent 3%, transparent 97%, rgba(0,0,0,0.02) 100%);"></div>
-                        </div>
+
                     </div>
-                    
-                     <!-- Footer Info  -->
-                    <div class="mt-4 pt-4 sm:pt-6 border-t border-white/20">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm text-gray-600 gap-3">
-                            <div class="flex flex-wrap items-center gap-3 sm:gap-6">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="w-3 h-3 sm:w-4 sm:h-4 text-green-500"></i>
-                                    <span>Secure viewing</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="zap" class="w-3 h-3 sm:w-4 sm:h-4 text-blue-500"></i>
-                                    <span>Fast loading</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="smartphone" class="w-3 h-3 sm:w-4 sm:h-4 text-purple-500"></i>
-                                    <span>Mobile optimized</span>
-                                </div>
-                            </div>
-                            <div class="text-gray-500">
-                                Powered by Google Drive
-                            </div>
+
+                    <!-- Error State (Hidden by default)  -->
+                    <div id="error-container"
+                        class="hidden glass-effect rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-center">
+                        <div
+                            class="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="alert-circle" class="w-6 h-6 sm:w-8 sm:h-8 text-red-500"></i>
                         </div>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">Unable to Load PDF</h2>
+                        <p class="text-sm sm:text-base text-gray-600 mb-6">The document couldn't be loaded. Please check
+                            your connection or try again later.</p>
+                        <button onclick="retryLoad()"
+                            class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl flex items-center gap-2 mx-auto shadow-lg transition-all text-sm sm:text-base">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            Try Again
+                        </button>
                     </div>
                 </div>
-                
-                 <!-- Error State (Hidden by default)  -->
-                <div id="error-container" class="hidden glass-effect rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-center">
-                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="alert-circle" class="w-6 h-6 sm:w-8 sm:h-8 text-red-500"></i>
-                    </div>
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">Unable to Load PDF</h2>
-                    <p class="text-sm sm:text-base text-gray-600 mb-6">The document couldn't be loaded. Please check your connection or try again later.</p>
-                    <button onclick="retryLoad()" class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl flex items-center gap-2 mx-auto shadow-lg transition-all text-sm sm:text-base">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                        Try Again
-                    </button>
+            </div>
+        </main>
+
+        <!-- Mobile Controls  -->
+        <div class="mobile-controls sm:hidden">
+            <div
+                class="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl border border-white/30 flex items-center gap-3">
+                <button onclick="zoomOut()"
+                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
+                </button>
+                <div class="zoom-display min-w-[50px] text-center">
+                    <span id="mobile-zoom-level" class="text-sm font-semibold text-gray-700">100%</span>
                 </div>
+                <button onclick="zoomIn()"
+                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
+                </button>
+                <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                <button onclick="refreshPDF()"
+                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+                <button onclick="toggleFullscreen()"
+                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i data-lucide="expand" class="w-4 h-4"></i>
+                </button>
             </div>
-        </div>
-    </main>
-    
-     <!-- Mobile Controls  -->
-    <div class="mobile-controls sm:hidden">
-        <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl border border-white/30 flex items-center gap-3">
-            <button onclick="zoomOut()" class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                <i data-lucide="zoom-out" class="w-4 h-4"></i>
-            </button>
-            <div class="zoom-display min-w-[50px] text-center">
-                <span id="mobile-zoom-level" class="text-sm font-semibold text-gray-700">100%</span>
-            </div>
-            <button onclick="zoomIn()" class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                <i data-lucide="zoom-in" class="w-4 h-4"></i>
-            </button>
-            <div class="w-px h-6 bg-gray-300 mx-1"></div>
-            <button onclick="refreshPDF()" class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-            </button>
-            <button onclick="toggleFullscreen()" class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                <i data-lucide="expand" class="w-4 h-4"></i>
-            </button>
-            <button onclick="downloadPDF()" class="control-btn bg-blue-500 hover:bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center">
-                <i data-lucide="download" class="w-4 h-4"></i>
-            </button>
         </div>
     </div>
-</div>
 
-<script>
-    lucide.createIcons();
-    
-    let currentZoom = 100;
-    let isFullscreen = false;
-    const pdfIframe = document.getElementById('pdf-iframe');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const errorContainer = document.getElementById('error-container');
-    const pdfContainer = document.querySelector('.glass-effect');
-    const pdfViewer = document.getElementById('pdf-viewer');
-    const zoomLevelDisplay = document.getElementById('zoom-level');
-    const mobileZoomLevelDisplay = document.getElementById('mobile-zoom-level');
-    
-    // Update zoom display
-    function updateZoomDisplay() {
-        const zoomText = `${currentZoom}%`;
-        if (zoomLevelDisplay) zoomLevelDisplay.textContent = zoomText;
-        if (mobileZoomLevelDisplay) mobileZoomLevelDisplay.textContent = zoomText;
-    }
-    
-    // Hide loading overlay when PDF loads
-    function hideLoading() {
-        setTimeout(() => {
-            loadingOverlay.style.opacity = '0';
-            loadingOverlay.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 300);
-        }, 800);
-    }
-    
-    // Show error state
-    function showError() {
-        loadingOverlay.style.display = 'none';
-        pdfContainer.style.display = 'none';
-        errorContainer.classList.remove('hidden');
-    }
-    
-    // Retry loading
-    function retryLoad() {
-        errorContainer.classList.add('hidden');
-        pdfContainer.style.display = 'block';
-        loadingOverlay.style.display = 'flex';
-        loadingOverlay.style.opacity = '1';
-        loadingOverlay.style.transform = 'scale(1)';
-        pdfIframe.src = pdfIframe.src;
-    }
-    
-    // Refresh PDF
-    function refreshPDF() {
-        loadingOverlay.style.display = 'flex';
-        loadingOverlay.style.opacity = '1';
-        loadingOverlay.style.transform = 'scale(1)';
-        pdfIframe.src = pdfIframe.src;
-        showNotification('Refreshing document...');
-    }
-    
-    // Toggle fullscreen
-    function toggleFullscreen() {
-        if (!isFullscreen) {
-            pdfViewer.classList.add('fullscreen-mode');
-            isFullscreen = true;
-            showNotification('Entered fullscreen mode');
-            
-            // Update fullscreen button icon
-            const fullscreenBtns = document.querySelectorAll('[onclick="toggleFullscreen()"] i');
-            fullscreenBtns.forEach(btn => {
-                btn.setAttribute('data-lucide', 'minimize');
-            });
-            lucide.createIcons();
-        } else {
-            pdfViewer.classList.remove('fullscreen-mode');
-            isFullscreen = false;
-            showNotification('Exited fullscreen mode');
-            
-            // Update fullscreen button icon
-            const fullscreenBtns = document.querySelectorAll('[onclick="toggleFullscreen()"] i');
-            fullscreenBtns.forEach(btn => {
-                btn.setAttribute('data-lucide', 'expand');
-            });
-            lucide.createIcons();
-        }
-    }
-    
-    // Open in new tab
-    function openInNewTab() {
-        const pdfUrl = pdfIframe.src.replace('/preview', '/view');
-        window.open(pdfUrl, '_blank');
-        showNotification('Opening in new tab...');
-    }
-    
-    // Enhanced zoom functions with actual iframe scaling
-    function zoomIn() {
-        currentZoom = Math.min(currentZoom + 25, 200);
-        applyZoom();
-        updateZoomDisplay();
-        showNotification(`Zoomed to ${currentZoom}%`);
-    }
-    
-    function zoomOut() {
-        currentZoom = Math.max(currentZoom - 25, 50);
-        applyZoom();
-        updateZoomDisplay();
-        showNotification(`Zoomed to ${currentZoom}%`);
-    }
-    
-    // Apply zoom to iframe
-    function applyZoom() {
-        const scale = currentZoom / 100;
-        const pdfFrame = document.querySelector('.pdf-frame');
-        pdfFrame.style.transform = `scale(${scale})`;
-        
-        // Adjust container height to prevent overflow
-        const container = document.querySelector('.pdf-iframe-container');
-        if (scale > 1) {
-            container.style.overflow = 'auto';
-        } else {
-            container.style.overflow = 'hidden';
-        }
-    }
-    
-    function downloadPDF() {
-        try {
-            const downloadUrl = pdfIframe.src.replace('/preview', '/export?format=pdf');
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = 'document.pdf';
-            link.click();
-            showNotification('Download started...');
-        } catch (error) {
-            showNotification('Download not available for this document');
-        }
-    }
-    
-    // Enhanced notification system
-    function showNotification(text, type = 'info') {
-        const notification = document.createElement('div');
-        const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
-        notification.className = `fixed top-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 text-sm font-medium max-w-xs`;
-        notification.textContent = text;
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
-        }, 10);
-        
-        // Animate out
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
-    
-    // Enhanced keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key) {
-                case '=':
-                case '+':
-                    e.preventDefault();
-                    zoomIn();
-                    break;
-                case '-':
-                    e.preventDefault();
-                    zoomOut();
-                    break;
-                case '0':
-                    e.preventDefault();
-                    currentZoom = 100;
-                    applyZoom();
-                    updateZoomDisplay();
-                    showNotification('Reset to 100%');
-                    break;
-                case 'r':
-                    e.preventDefault();
-                    refreshPDF();
-                    break;
-            }
-        }
-        
-        if (e.key === 'Escape' && isFullscreen) {
-            toggleFullscreen();
-        }
-        
-        if (e.key === 'F11') {
-            e.preventDefault();
-            toggleFullscreen();
-        }
-    });
-    
-    // Touch gestures for mobile zoom
-    let touchStartDistance = 0;
-    let initialZoom = 100;
-    
-    pdfIframe.addEventListener('touchstart', function(e) {
-        if (e.touches.length === 2) {
-            touchStartDistance = Math.hypot(
-                e.touches[0].pageX - e.touches[1].pageX,
-                e.touches[0].pageY - e.touches[1].pageY
-            );
-            initialZoom = currentZoom;
-        }
-    });
-    
-    pdfIframe.addEventListener('touchmove', function(e) {
-        if (e.touches.length === 2) {
-            e.preventDefault();
-            const currentDistance = Math.hypot(
-                e.touches[0].pageX - e.touches[1].pageX,
-                e.touches[0].pageY - e.touches[1].pageY
-            );
-            
-            const scale = currentDistance / touchStartDistance;
-            const newZoom = Math.max(50, Math.min(200, initialZoom * scale));
-            
-            if (Math.abs(newZoom - currentZoom) > 5) {
-                currentZoom = Math.round(newZoom / 25) * 25;
-                applyZoom();
-                updateZoomDisplay();
-            }
-        }
-    });
-    
-    // Enhanced loading experience with progress indication
-    let loadingTimeout;
-    function startLoadingTimer() {
-        loadingTimeout = setTimeout(() => {
-            if (loadingOverlay.style.display !== 'none') {
-                const loadingText = loadingOverlay.querySelector('p');
-                if (loadingText) {
-                    loadingText.textContent = 'Still loading... This may take a moment';
-                }
-            }
-        }, 5000);
-    }
-    
-    // Initialize
-    updateZoomDisplay();
-    startLoadingTimer();
-    
-    // Handle window resize
-    window.addEventListener('resize', function() {
-        if (isFullscreen) {
-            // Adjust fullscreen layout if needed
-        }
-    });
-    
-    // Prevent context menu on iframe for better UX
-    pdfIframe.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-    });
-</script>
-
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="/js/content-viewer.js"></script>
 </body>
+
 </html>
