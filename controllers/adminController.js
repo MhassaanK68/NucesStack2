@@ -189,6 +189,26 @@ const adminController = {
       console.error('Error deleting note:', error);
       res.status(500).json({ error: 'Failed to delete note' });
     }
+  },
+
+  // Get notes count for a semester
+  getNotesCount: async (req, res) => {
+    try {
+      const { semester_id } = req.query;
+      
+      if (!semester_id) {
+        return res.status(400).json({ error: 'semester_id is required' });
+      }
+      
+      const count = await models.notes.count({
+        where: { semester_id }
+      });
+      
+      res.json({ count });
+    } catch (error) {
+      console.error('Error fetching notes count:', error);
+      res.status(500).json({ error: 'Failed to fetch notes count' });
+    }
   }
 };
 
