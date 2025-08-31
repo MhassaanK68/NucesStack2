@@ -1,265 +1,499 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Upload - Nuces Stack!</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <h1 class="text-2xl font-bold text-gray-900">
-                    <a href="/">Nuces Stack!</a>
-                </h1>
-                
-                <!-- Navigation -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="/" class="text-gray-700 hover:text-blue-600 font-medium">Home</a>
-                    <div class="relative group">
-                        <button class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
-                            Semesters
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                            <div class="py-1">
-                                <a href="semester?semester=1" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 1</a>
-                                <a href="semester?semester=2" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 2</a>
-                                <a href="semester?semester=3" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 3</a>
-                                <a href="semester?semester=4" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 4</a>
-                                <a href="semester?semester=5" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 5</a>
-                                <a href="semester?semester=6" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 6</a>
-                                <a href="semester?semester=7" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 7</a>
-                                <a href="semester?semester=8" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Semester 8</a>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="admin" class="text-blue-600 font-medium">Admin Upload</a>
-                </nav>
-            </div>
+<%- include('partials/header') %>
+
+  <!-- Page Title -->
+  <section class="max-w-7xl mx-auto px-6 pt-10">
+    
+    
+  </section>
+
+  <!-- Content -->
+  <main class="max-w-7xl mx-auto px-6 pb-16 pt-8">
+    <!-- Semester Selector -->
+    <div class="bg-white rounded-2xl border border-sky-100 shadow-sm p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z"/>
+          </svg>
         </div>
-    </header>
+        <h3 class="text-lg font-semibold text-sky-700">Select Semester</h3>
+      </div>
+      
+      <label class="block text-sm mb-1">Current Semester</label>
+      <select id="semesterSelect" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300">
+        <option value="">Loading semesters...</option>
+      </select>
+    </div>
 
-    <!-- Breadcrumb -->
-    <nav class="bg-white border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex items-center space-x-2 text-sm">
-                <a href="/" class="text-blue-600 hover:text-blue-800">Home</a>
-                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <span class="text-gray-700">Admin Upload</span>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Add Subject -->
+      <div class="bg-white rounded-2xl border border-sky-100 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+            <!-- graduation cap -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M19 10v6a7 7 0 0 1-14 0v-6"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-sky-700">Add Subject</h3>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Upload Study Materials</h2>
-                <p class="text-gray-600">Add new notes and study materials for students to access</p>
+        <label class="block text-sm mb-1">Subject Name</label>
+        <input id="subjectName" type="text"
+               class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"
+               placeholder="e.g., Data Structures" />
+        <button id="addSubjectBtn"
+                class="w-full py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-medium">
+          <span class="btn-text">Add Subject</span>
+          <div class="loading-spinner" style="display: none;"></div>
+        </button>
+      </div>
+
+      <!-- Subjects List (Remove) -->
+      <div class="bg-white rounded-2xl border border-sky-100 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+              <!-- list icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+              </svg>
             </div>
-
-            <!-- Upload Form -->
-            <div class="bg-white rounded-lg shadow-md p-8">
-                <form class="space-y-6">
-                    <!-- Title -->
-                    <div>
-                        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-                            Title <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter the title of the study material"
-                        >
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                            Description
-                        </label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="4"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Provide a brief description of the content"
-                        ></textarea>
-                    </div>
-
-                    <!-- Semester Selection -->
-                    <div>
-                        <label for="semester" class="block text-sm font-medium text-gray-700 mb-2">
-                            Semester <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            id="semester"
-                            name="semester"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Select Semester</option>
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                            <option value="3">Semester 3</option>
-                            <option value="4">Semester 4</option>
-                            <option value="5">Semester 5</option>
-                            <option value="6">Semester 6</option>
-                            <option value="7">Semester 7</option>
-                            <option value="8">Semester 8</option>
-                        </select>
-                    </div>
-
-                    <!-- Subject Selection -->
-                    <div>
-                        <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
-                            Subject <span class="text-red-500">*</span>
-                        </label>
-                        <select
-                            id="subject"
-                            name="subject"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Select Subject</option>
-                            <option value="mathematics">Mathematics</option>
-                            <option value="physics">Physics</option>
-                            <option value="chemistry">Chemistry</option>
-                            <option value="computer-science">Computer Science</option>
-                            <option value="english">English</option>
-                            <option value="engineering-drawing">Engineering Drawing</option>
-                            <option value="mechanical-engineering">Mechanical Engineering</option>
-                            <option value="electrical-engineering">Electrical Engineering</option>
-                            <option value="civil-engineering">Civil Engineering</option>
-                            <option value="electronics">Electronics</option>
-                        </select>
-                    </div>
-
-                    <!-- File Upload -->
-                    <div>
-                        <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
-                            Upload PDF <span class="text-red-500">*</span>
-                        </label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="flex text-sm text-gray-600">
-                                    <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                        <span>Upload a file</span>
-                                        <input id="file" name="file" type="file" accept=".pdf" required class="sr-only">
-                                    </label>
-                                    <p class="pl-1">or drag and drop</p>
-                                </div>
-                                <p class="text-xs text-gray-500">PDF up to 10MB</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Author/Instructor -->
-                    <div>
-                        <label for="author" class="block text-sm font-medium text-gray-700 mb-2">
-                            Author/Instructor
-                        </label>
-                        <input
-                            type="text"
-                            id="author"
-                            name="author"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter author or instructor name"
-                        >
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="flex justify-end space-x-4">
-                        <button
-                            type="button"
-                            class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                        >
-                            Upload Material
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Recent Uploads -->
-            <div class="mt-12">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6">Recent Uploads</h3>
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-lg font-medium text-gray-900">Upload History</h4>
-                            <span class="text-sm text-gray-500">Last 10 uploads</span>
-                        </div>
-                    </div>
-                    <div class="divide-y divide-gray-200">
-                        <div class="px-6 py-4 flex items-center justify-between">
-                            <div>
-                                <h5 class="font-medium text-gray-900">Quantum Physics Introduction</h5>
-                                <p class="text-sm text-gray-500">Physics • Semester 1 • 2 hours ago</p>
-                            </div>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Published
-                            </span>
-                        </div>
-                        <div class="px-6 py-4 flex items-center justify-between">
-                            <div>
-                                <h5 class="font-medium text-gray-900">Calculus Fundamentals</h5>
-                                <p class="text-sm text-gray-500">Mathematics • Semester 1 • 1 day ago</p>
-                            </div>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Published
-                            </span>
-                        </div>
-                        <div class="px-6 py-4 flex items-center justify-between">
-                            <div>
-                                <h5 class="font-medium text-gray-900">Organic Chemistry Basics</h5>
-                                <p class="text-sm text-gray-500">Chemistry • Semester 2 • 3 days ago</p>
-                            </div>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <h3 class="text-lg font-semibold text-sky-700">Subjects</h3>
+          </div>
         </div>
-    </main>
 
-    <script>
-        // File upload handling
-        const fileInput = document.getElementById('file');
-        const fileLabel = fileInput.parentElement;
-        
-        fileInput.addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name;
-            if (fileName) {
-                fileLabel.querySelector('span').textContent = fileName;
-            }
+        <ul id="subjectList" class="space-y-2">
+          <!-- rows injected here -->
+        </ul>
+      </div>
+
+
+      <!-- Add Note -->
+      <div class="bg-white rounded-2xl border border-sky-100 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+            <!-- note icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 12h6m-6 4h6M8 3h8a2 2 0 0 1 2 2v14l-4-3-4 3V5a2 2 0 0 1 2-2Z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-sky-700">Add Note</h3>
+        </div>
+
+        <label class="block text-sm mb-1">Subject</label>
+        <select id="noteSubject" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300">
+          <!-- options injected -->
+        </select>
+
+        <label class="block text-sm mb-1">Note Title</label>
+        <input id="noteTitle" type="text"
+               class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"
+               placeholder="e.g., Stacks & Queues Cheatsheet" />
+
+        <label class="block text-sm mb-1">Description (Optional)</label>
+        <textarea id="noteDescription" rows="2"
+                  class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                  placeholder="Brief description of the note"></textarea>
+
+        <label class="block text-sm mb-1">PDF ID/Link</label>
+        <input id="notePdfId" type="text"
+               class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"
+               placeholder="PDF file ID or link" />
+
+        <label class="block text-sm mb-1">Video ID/Link</label>
+        <input id="noteVideoId" type="text"
+               class="w-full mb-4 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"
+               placeholder="Video ID or YouTube link" />
+
+        <button id="addNoteBtn"
+                class="w-full py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-medium">
+          <span class="btn-text">Add Note</span>
+          <div class="loading-spinner" style="display: none;"></div>
+        </button>
+      </div>
+
+
+      <!-- Remove Note -->
+      <div class="bg-white rounded-2xl border border-sky-100 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="h-10 w-10 rounded-xl bg-sky-100 flex items-center justify-center">
+            <!-- trash icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M10 11v6M14 11v6"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-sky-700">Remove Note</h3>
+        </div>
+
+        <label class="block text-sm mb-1">Subject</label>
+        <select id="removeNoteSubject" class="w-full mb-3 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"></select>
+
+        <label class="block text-sm mb-1">Note</label>
+        <select id="removeNoteSelect" class="w-full mb-4 px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-300"></select>
+
+        <button id="removeNoteBtn"
+                class="w-full py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium">
+          <span class="btn-text">Remove Note</span>
+          <div class="loading-spinner" style="display: none;"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- subtle inline toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 hidden">
+      <div class="px-4 py-2 rounded-xl bg-white shadow border border-sky-100 text-sky-700 text-sm"></div>
+    </div>
+  </main>
+
+  <script>
+    // --- Loading state management ---
+    function setButtonLoading(buttonId, isLoading) {
+      const button = document.getElementById(buttonId);
+      const spinner = button.querySelector('.loading-spinner');
+      const text = button.querySelector('.btn-text');
+      
+      if (isLoading) {
+        button.classList.add('btn-loading');
+        spinner.style.display = 'inline-block';
+        text.style.opacity = '0';
+      } else {
+        button.classList.remove('btn-loading');
+        spinner.style.display = 'none';
+        text.style.opacity = '1';
+      }
+    }
+
+    // --- API functions ---
+    async function fetchSemesters() {
+      try {
+        const response = await fetch('/api/semesters');
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching semesters:', error);
+        return [];
+      }
+    }
+
+    async function fetchSubjects(semesterId = null) {
+      try {
+        const url = semesterId ? `/api/subjects?semester_id=${semesterId}` : '/api/subjects';
+        const response = await fetch(url);
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+        return [];
+      }
+    }
+
+    async function fetchNotesForSubject(subjectId) {
+      try {
+        const response = await fetch(`/api/subjects/${subjectId}/notes`);
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching notes:', error);
+        return [];
+      }
+    }
+
+    async function addSubject(name, semesterId) {
+      try {
+        const response = await fetch('/api/subjects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, semester_id: semesterId })
         });
+        return await response.json();
+      } catch (error) {
+        console.error('Error adding subject:', error);
+        throw error;
+      }
+    }
 
-        // Form submission
-        document.querySelector('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Upload functionality would be implemented with backend integration');
+    async function deleteSubject(id) {
+      try {
+        const response = await fetch(`/api/subjects/${id}`, {
+          method: 'DELETE'
         });
-    </script>
-</body>
-</html>
+        return await response.json();
+      } catch (error) {
+        console.error('Error deleting subject:', error);
+        throw error;
+      }
+    }
+
+    async function addNote(title, subjectId, description, pdfId, videoId) {
+      try {
+        const response = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            title, 
+            subject_id: subjectId, 
+            description, 
+            pdf_id: pdfId, 
+            video_id: videoId,
+            semester_id: state.selectedSemester 
+          })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error adding note:', error);
+        throw error;
+      }
+    }
+
+    async function deleteNote(id) {
+      try {
+        const response = await fetch(`/api/notes/${id}`, {
+          method: 'DELETE'
+        });
+        return await response.json();
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        throw error;
+      }
+    }
+
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.querySelector("div").textContent = msg;
+      t.classList.remove("hidden");
+      setTimeout(() => t.classList.add("hidden"), 1600);
+    }
+
+    // --- State management ---
+    let state = {
+      semesters: [],
+      subjects: [],
+      subjectNotes: {}, // Cache notes for each subject
+      selectedSemester: null
+    };
+
+    // --- DOM refs ---
+    const semesterSelect = document.getElementById("semesterSelect");
+    const subjectName = document.getElementById("subjectName");
+    const addSubjectBtn = document.getElementById("addSubjectBtn");
+    const subjectList = document.getElementById("subjectList");
+
+    const noteSubject = document.getElementById("noteSubject");
+    const noteTitle = document.getElementById("noteTitle");
+    const noteDescription = document.getElementById("noteDescription");
+    const notePdfId = document.getElementById("notePdfId");
+    const noteVideoId = document.getElementById("noteVideoId");
+    const addNoteBtn = document.getElementById("addNoteBtn");
+
+    const removeNoteSubject = document.getElementById("removeNoteSubject");
+    const removeNoteSelect = document.getElementById("removeNoteSelect");
+    const removeNoteBtn = document.getElementById("removeNoteBtn");
+
+    // --- Render helpers ---
+    function fillSemesterSelect() {
+      semesterSelect.innerHTML = "";
+      if (state.semesters.length === 0) {
+        semesterSelect.innerHTML = '<option value="">No semesters found</option>';
+        return;
+      }
+      
+      semesterSelect.innerHTML = '<option value="">Select Semester</option>';
+      state.semesters.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id; opt.textContent = s.name;
+        semesterSelect.appendChild(opt);
+      });
+      
+      // Auto-select first semester if none selected
+      if (!state.selectedSemester && state.semesters.length > 0) {
+        state.selectedSemester = state.semesters[0].id;
+        semesterSelect.value = state.selectedSemester;
+      }
+    }
+
+    async function renderSubjectsList() {
+      subjectList.innerHTML = "";
+      if (!state.selectedSemester) {
+        subjectList.innerHTML = '<li class="text-center text-slate-500 py-4">Please select a semester first</li>';
+        return;
+      }
+      
+      state.subjects.forEach(sub => {
+        const notesCount = sub.notesCount || 0;
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200";
+        li.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="h-8 w-8 rounded-lg bg-sky-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="font-medium text-slate-800">${sub.name}</div>
+              <div class="text-xs text-slate-500">${notesCount} notes</div>
+            </div>
+          </div>
+          <button data-id="${sub.id}" class="delete-sub px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">Remove</button>
+        `;
+        subjectList.appendChild(li);
+      });
+
+      // bind delete
+      subjectList.querySelectorAll(".delete-sub").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const id = e.currentTarget.getAttribute("data-id");
+          try {
+            await deleteSubject(id);
+            await loadSubjectsForSemester();
+            toast("Subject removed");
+          } catch (error) {
+            toast("Failed to remove subject");
+          }
+        });
+      });
+    }
+
+    function fillSubjectSelect(el) {
+      el.innerHTML = "";
+      if (!state.selectedSemester) {
+        el.innerHTML = '<option value="">Select semester first</option>';
+        return;
+      }
+      
+      el.innerHTML = '<option value="">Select Subject</option>';
+      state.subjects.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id; opt.textContent = s.name;
+        el.appendChild(opt);
+      });
+    }
+
+
+    async function fillNotesForSubject(subjectId, el) {
+      el.innerHTML = "";
+      if (!subjectId) {
+        el.innerHTML = '<option value="">Select subject first</option>';
+        return;
+      }
+      
+      // Load notes for this subject if not cached
+      if (!state.subjectNotes[subjectId]) {
+        state.subjectNotes[subjectId] = await fetchNotesForSubject(subjectId);
+      }
+      
+      const notes = state.subjectNotes[subjectId];
+      el.innerHTML = '<option value="">Select Note</option>';
+      notes.forEach(n => {
+        const opt = document.createElement("option");
+        opt.value = n.id; opt.textContent = n.title;
+        el.appendChild(opt);
+      });
+    }
+
+    async function loadInitialData() {
+      state.semesters = await fetchSemesters();
+      fillSemesterSelect();
+      if (state.selectedSemester) {
+        await loadSubjectsForSemester();
+      }
+    }
+
+    async function loadSubjectsForSemester() {
+      if (!state.selectedSemester) return;
+      state.subjects = await fetchSubjects(state.selectedSemester);
+      await render();
+    }
+
+    async function render() {
+      await renderSubjectsList();
+      fillSubjectSelect(noteSubject);
+      fillSubjectSelect(removeNoteSubject);
+    }
+
+    // --- Event handlers ---
+    semesterSelect.addEventListener("change", async () => {
+      state.selectedSemester = semesterSelect.value;
+      if (state.selectedSemester) {
+        await loadSubjectsForSemester();
+      } else {
+        state.subjects = [];
+        await render();
+      }
+    });
+
+    addSubjectBtn.addEventListener("click", async () => {
+      const name = subjectName.value.trim();
+      if (!name) return toast("Enter a subject name");
+      if (!state.selectedSemester) return toast("Select a semester first");
+      
+      setButtonLoading('addSubjectBtn', true);
+      try {
+        await addSubject(name, state.selectedSemester);
+        subjectName.value = "";
+        await loadSubjectsForSemester();
+        toast("Subject added");
+      } catch (error) {
+        toast("Failed to add subject");
+      } finally {
+        setButtonLoading('addSubjectBtn', false);
+      }
+    });
+
+    addNoteBtn.addEventListener("click", async () => {
+      const sid = noteSubject.value;
+      const title = noteTitle.value.trim();
+      const description = noteDescription.value.trim();
+      const pdfId = notePdfId.value.trim();
+      const videoId = noteVideoId.value.trim();
+      
+      if (!sid) return toast("Select a subject");
+      if (!title) return toast("Enter a note title");
+
+      setButtonLoading('addNoteBtn', true);
+      try {
+        await addNote(title, sid, description, pdfId, videoId);
+        noteTitle.value = ""; 
+        noteDescription.value = "";
+        notePdfId.value = "";
+        noteVideoId.value = "";
+        // Clear cached notes for this subject
+        delete state.subjectNotes[sid];
+        await loadSubjectsForSemester();
+        toast("Note added");
+      } catch (error) {
+        toast("Failed to add note");
+      } finally {
+        setButtonLoading('addNoteBtn', false);
+      }
+    });
+
+    removeNoteSubject.addEventListener("change", async () => {
+      await fillNotesForSubject(removeNoteSubject.value, removeNoteSelect);
+    });
+
+    removeNoteBtn.addEventListener("click", async () => {
+      const sid = removeNoteSubject.value;
+      const nid = removeNoteSelect.value;
+      if (!sid || !nid) return;
+
+      setButtonLoading('removeNoteBtn', true);
+      try {
+        await deleteNote(nid);
+        // Clear cached notes for this subject
+        delete state.subjectNotes[sid];
+        await loadSubjectsForSemester();
+        await fillNotesForSubject(sid, removeNoteSelect);
+        toast("Note removed");
+      } catch (error) {
+        toast("Failed to remove note");
+      } finally {
+        setButtonLoading('removeNoteBtn', false);
+      }
+    });
+
+    // init
+    loadInitialData();
+  </script>
+
+<%- include('partials/footer') %>

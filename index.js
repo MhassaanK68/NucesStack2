@@ -114,6 +114,60 @@ app.post('/logout', (req, res) => {
   });
 })
 
+// POST login endpoint
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).render('login.ejs', { 
+        error: 'Email and password are required' 
+      });
+    }
+
+    // Find admin by username (using email field as username)
+    const admin = await models.admins.findOne({
+      where: { username: email }
+    });
+
+    if (!admin) {
+      return res.status(401).render('login.ejs', { 
+        error: 'Invalid credentials' 
+      });
+    }
+
+    // Compare password (assuming plain text for now - should be hashed in production)
+    if (admin.password !== password) {
+      return res.status(401).render('login.ejs', { 
+        error: 'Invalid credentials' 
+      });
+    }
+
+    // Set session
+    req.session.user = {
+      id: admin.id,
+      username: admin.username
+    };
+
+    res.redirect('/admin');
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).render('login.ejs', { 
+      error: 'Login failed. Please try again.' 
+    });
+  }
+})
+
+// Logout endpoint
+app.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+    }
+    res.redirect('/login');
+  });
+})
+
 // Specific Semester Page
 app.get('/u/:semesterSlug', async (req, res) => {
  
