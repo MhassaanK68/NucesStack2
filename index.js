@@ -57,23 +57,23 @@ app.get('/admin', (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-  res.render('login.ejs');
+  res.render('login.ejs', {error: null});
 })
 
 // POST login endpoint
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
       return res.status(400).render('login.ejs', { 
-        error: 'Email and password are required' 
+        error: 'Username and password are required' 
       });
     }
 
     // Find admin by username (using email field as username)
     const admin = await models.admins.findOne({
-      where: { username: email }
+      where: { username: username }
     });
 
     if (!admin) {
@@ -188,7 +188,6 @@ app.get('/view-notes', (req, res)=>{
 })
 
 // API Routes for Admin Panel
-
 // Import admin controller
 const adminController = require('./controllers/adminController');
 
