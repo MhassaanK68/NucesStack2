@@ -50,6 +50,9 @@ app.get('/login', (req, res) => {
 // Specific Semester Page
 app.get('/:semesterSlug', async (req, res) => {
  
+  return res.render("content-viewer.ejs")
+
+
   try {
     const { semesterSlug } = req.params;
 
