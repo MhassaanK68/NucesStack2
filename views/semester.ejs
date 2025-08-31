@@ -13,7 +13,7 @@
                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-                <span class="text-gray-700" id="semester-breadcrumb">Semester <%= semester %></span>
+                <span class="text-gray-700" id="semester-breadcrumb"><%= semester.name %></span>
             </div>
         </div>
     </nav>
@@ -22,7 +22,7 @@
     <main class="my-2">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-start mb-4">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="semester-title">Semester <%= semester %> Subjects
+                <h2 class="text-3xl font-bold text-gray-900 mb-4" id="semester-title"><%= semester.name %> Subjects
                 </h2>
             </div>
 
@@ -30,7 +30,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
                 <% subjects.forEach(subject=> { %>
-                    <a href="subject?subject=<%= subject.slug %>"
+                    <a href="/<%= semester.slug %>/<%= subject.slug %>"
                         class="block bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group">
 
                         <!-- Subject Title -->

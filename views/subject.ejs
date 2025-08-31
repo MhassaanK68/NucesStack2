@@ -7,15 +7,15 @@
         <i data-lucide="home" class="w-4 h-4"></i> Home
       </a>
       <i data-lucide="chevron-right" class="w-4 h-4"></i>
-      <a href="/semester?semester=1" class="hover:text-blue-600">Semester 1</a>
+      <a href="/<%= semester.slug %>" class="hover:text-blue-600"><%= semester.name %></a>
       <i data-lucide="chevron-right" class="w-4 h-4"></i>
-      <span class="font-medium text-gray-900">Introduction to Programming</span>
+      <span class="font-medium text-gray-900"><%= subject.name %></span>
     </nav>
 
     <!-- Subject Title -->
     <div class="mb-8">
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-blue-600">
-        Introduction to Programming
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight color-primary">
+        <%= subject.name %>
       </h1>
       <p class="mt-2 text-lg text-gray-600">Select a chapter to view course materials.</p>
     </div>
@@ -35,50 +35,36 @@
 
     <!-- Chapters Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Chapter Card -->
-      <div class="chapter-card rounded-lg border bg-white shadow-sm flex flex-col transition hover:shadow-lg hover:border-blue-400 hover:-translate-y-1 duration-200">
-        <div class="flex-grow p-6">
-          <h2 class="chapter-title text-lg font-semibold text-gray-900">Basics of Programming</h2>
-          <div class="flex items-center gap-4 pt-2">
-            <span class="flex items-center gap-1 text-xs text-gray-500">
-              <i data-lucide="video" class="w-4 h-4 text-blue-500"></i> 2 Videos
-            </span>
-            <span class="flex items-center gap-1 text-xs text-gray-500">
-              <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> 3 Notes
-            </span>
-          </div>
-        </div>
-        <div class="flex flex-col items-stretch space-y-2 p-6 border-t">
-          <a href="#videos" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
-            <i data-lucide="external-link" class="mr-2 h-4 w-4"></i>
-            Watch Videos
-          </a>
-          <a href="#notes" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md border bg-gray-100 text-gray-700 hover:bg-gray-200">
-            <i data-lucide="file-text" class="mr-2 h-4 w-4"></i>
-            View Notes
-          </a>
-        </div>
-      </div>
 
-      <!-- Another Chapter (No materials) -->
-      <div class="chapter-card rounded-lg border bg-white shadow-sm flex flex-col transition hover:shadow-lg hover:border-blue-400 hover:-translate-y-1 duration-200">
-        <div class="flex-grow p-6">
-          <h2 class="chapter-title text-lg font-semibold text-gray-900">Control Structures</h2>
-          <div class="flex items-center gap-4 pt-2">
-            <span class="flex items-center gap-1 text-xs text-gray-500">
-              <i data-lucide="video" class="w-4 h-4 text-blue-500"></i> 0 Videos
-            </span>
-            <span class="flex items-center gap-1 text-xs text-gray-500">
-              <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> 0 Notes
-            </span>
+      <% notes.forEach(note => { %>
+        <!-- Chapter Card -->
+        <div class="chapter-card rounded-lg border bg-white shadow-sm flex flex-col transition hover:shadow-lg hover:border-blue-400 hover:-translate-y-1 duration-200">
+          <div class="flex-grow p-6">
+            <h2 class="chapter-title text-lg font-semibold text-gray-900"><%= note.title %></h2>
+            <div class="flex items-center gap-4 pt-2">
+              <span class="flex items-center gap-1 text-xs text-gray-500">
+                <i data-lucide="video" class="w-4 h-4 text-blue-500"></i> Videos
+              </span>
+              <span class="flex items-center gap-1 text-xs text-gray-500">
+                <i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> Notes
+              </span>
+            </div>
+          </div>
+          <div class="flex flex-col items-stretch space-y-2 p-6 border-t">
+            <a href="#videos" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
+              <i data-lucide="external-link" class="mr-2 h-4 w-4"></i>
+              Watch Videos
+            </a>
+            <a href="#notes" class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md border bg-gray-100 text-gray-700 hover:bg-gray-200">
+              <i data-lucide="file-text" class="mr-2 h-4 w-4"></i>
+              View Notes
+            </a>
           </div>
         </div>
-        <div class="flex flex-col items-stretch space-y-2 p-6 border-t">
-          <button disabled class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-gray-200 text-gray-500 cursor-not-allowed">
-            No Materials
-          </button>
-        </div>
-      </div>
+
+      <%});%>
+
+
     </div>
 
 
@@ -96,6 +82,11 @@
     const searchInput = document.getElementById("searchInput");
     const chapters = document.querySelectorAll(".chapter-card");
     const noResults = document.getElementById("noResults");
+
+    if (chapters.length == 0){
+      noResults.classList.remove("hidden");
+    }
+
 
     searchInput.addEventListener("input", () => {
       const query = searchInput.value.toLowerCase().trim();

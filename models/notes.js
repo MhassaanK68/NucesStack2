@@ -23,14 +23,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    chapter_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'chapters',
-        key: 'id'
-      }
-    },
     subject_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -58,13 +50,6 @@ module.exports = function(sequelize, DataTypes) {
         using: "BTREE",
         fields: [
           { name: "id" },
-        ]
-      },
-      {
-        name: "fk_1",
-        using: "BTREE",
-        fields: [
-          { name: "chapter_id" },
         ]
       },
       {

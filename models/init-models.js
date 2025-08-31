@@ -10,8 +10,6 @@ function initModels(sequelize) {
   var semesters = _semesters(sequelize, DataTypes);
   var subjects = _subjects(sequelize, DataTypes);
 
-  notes.belongsTo(chapters, { as: "chapter", foreignKey: "chapter_id"});
-  chapters.hasMany(notes, { as: "notes", foreignKey: "chapter_id"});
   notes.belongsTo(semesters, { as: "semester", foreignKey: "semester_id"});
   semesters.hasMany(notes, { as: "notes", foreignKey: "semester_id"});
   subjects.belongsTo(semesters, { as: "semester", foreignKey: "semester_id"});
