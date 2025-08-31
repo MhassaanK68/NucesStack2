@@ -53,12 +53,23 @@ app.get('/semester', async (req, res) => {
       return res.status(400).send('Semester not specified');
     }
 
-    const subjects = await models.subjects.findAll({
-      where: { semester: semester }
+    // Get The Semester ID 
+    const semester_id = await models.semesters.findOne({
+      where: { name: '1' },
+      attributes: ['id'] 
     });
 
+
+    // Use Semester ID to get Associated Subjects
+    const subjects = await models.subjects.findAll({
+      where: { semester_id: semester_id.id  }
+    });
+
+    console.log(subjects)
+
     res.render('semester.ejs', { semester: semester, subjects });
-  } catch (err) {
+  } 
+  catch (err) {
     console.error('Error fetching subjects:', err);
     res.status(500).send('Server error');
   }

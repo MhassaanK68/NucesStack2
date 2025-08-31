@@ -30,13 +30,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
                 <% subjects.forEach(subject=> { %>
-                    <a href="subject?subject=<%= subject.id %>"
+                    <a href="subject?subject=<%= subject.slug %>"
                         class="block bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group">
 
                         <!-- Subject Title -->
                         <h3
                             class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                            <%= subject.title %>
+                            <%= subject.name %>
                         </h3>
 
                         <!-- Description -->
@@ -58,6 +58,9 @@
                     <% }) %>
 
             </div>
+
+            <div class="py-10"></div>
+
         </div>
     </main>
 
