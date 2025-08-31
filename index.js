@@ -216,12 +216,14 @@ app.get('/u/:semesterSlug/:subjectSlug', async (req, res) => {
       attributes: ['id', 'name', 'slug'],
     });
 
+    if (!subject) {
+      return res.status(404).redirect("/not-found");
+    }
+
     // Find notes inside the subject
     const notes = await models.notes.findAll({
       where: { subject_id: subject.id, semester_id: semester.id },
     })
-
-    console
 
     if (!subject) {
       return res.status(404).redirect("/not-found");

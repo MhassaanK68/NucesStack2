@@ -2,6 +2,32 @@ const sequelize = require('../config/db');
 const initModels = require('../models/init-models');
 const models = initModels(sequelize);
 
+function getDriveFileId(url) {
+    // Regex to match Google Drive file links and extract FILE_ID
+    const regex = /https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?id=)([a-zA-Z0-9_-]+)(?:\/view|\?.*)?/;
+
+    const match = url.match(regex);
+
+    if (match) {
+        return match[1]; // Extracted FILE_ID
+    } else {
+        return false; // Not a valid Google Drive file link
+    }
+}
+
+function isValidYouTubeLink(url) {
+    // Regex to match YouTube video links
+    const regex = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?].*)?$/;
+
+    const match = url.match(regex);
+
+    if (match) {
+        return true; // Valid YouTube link
+    } else {
+        return false; // Not a valid YouTube link
+    }
+}
+
 const adminController = {
   // Get all semesters
   getSemesters: async (req, res) => {
@@ -116,15 +142,28 @@ const adminController = {
         return res.status(400).json({ error: 'Title and subject_id are required' });
       }
 
+      let NoteID;
+
+      if (pdf_id !== '') {
+          NoteID = getDriveFileId(pdf_id);
+          console.log(NoteID)
+          if (NoteID === false) {
+              return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+          }
+      }
+
+
       const note = await models.notes.create({
         title,
         description,
         subject_id,
         semester_id,
-        pdf_id,
+        pdf_id: NoteID,
         video_id
       });
       
+      console
+
       res.json(note);
     } catch (error) {
       console.error('Error creating note:', error);
