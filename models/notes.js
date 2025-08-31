@@ -15,14 +15,6 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    type: {
-      type: DataTypes.ENUM('pdf','video'),
-      allowNull: false
-    },
-    url: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
     subject_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -38,6 +30,14 @@ module.exports = function(sequelize, DataTypes) {
         model: 'semesters',
         key: 'id'
       }
+    },
+    pdf_id: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    video_id: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
     sequelize,

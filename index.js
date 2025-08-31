@@ -48,11 +48,8 @@ app.get('/login', (req, res) => {
 })
 
 // Specific Semester Page
-app.get('/:semesterSlug', async (req, res) => {
+app.get('/u/:semesterSlug', async (req, res) => {
  
-  return res.render("content-viewer.ejs")
-
-
   try {
     const { semesterSlug } = req.params;
 
@@ -79,10 +76,9 @@ app.get('/:semesterSlug', async (req, res) => {
 });
 
 // Specific Subject in Specific Semester Page
-app.get('/:semesterSlug/:subjectSlug', async (req, res) => {
+app.get('/u/:semesterSlug/:subjectSlug', async (req, res) => {
   try {
     const { semesterSlug, subjectSlug } = req.params;
-
     // Find semester
     const semester = await models.semesters.findOne({
       where: { slug: semesterSlug },
@@ -116,6 +112,16 @@ app.get('/:semesterSlug/:subjectSlug', async (req, res) => {
     console.error(err);
     res.status(500).render("server-error.ejs");
   }
+});
+
+// Content Viewer
+app.get('/view-notes', (req, res)=>{
+  const { id } = req.query;
+  res.render('content-viewer.ejs', {document: id})
+})
+
+app.use((req, res, next) => {
+  res.status(404).render('not-found.ejs');
 });
 
 

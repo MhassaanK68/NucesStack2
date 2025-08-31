@@ -29,4 +29,13 @@
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
+
+        .breadcrumb-item {
+            white-space: nowrap;       /* Prevent wrapping */
+            overflow: hidden;          /* Hide overflow */
+            text-overflow: ellipsis;   /* Show ... for long text */
+            max-width: 120px;          /* Adjust to fit your design */
+            display: inline-block;
+            vertical-align: middle;
+            }
         

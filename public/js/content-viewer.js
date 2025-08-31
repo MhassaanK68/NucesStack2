@@ -54,16 +54,9 @@
     
     // Toggle fullscreen
     function toggleFullscreen() {
-        const isMobile = window.innerWidth <= 768; // define mobile breakpoint
-        const header = document.getElementById('doc-view-header');
 
         if (!isFullscreen) {
             pdfViewer.classList.add('fullscreen-mode');
-
-            // Hide header only on mobile
-            if (isMobile && header) {
-                header.style.display = 'none';
-            }
 
             isFullscreen = true;
 
@@ -73,11 +66,6 @@
             lucide.createIcons();
         } else {
             pdfViewer.classList.remove('fullscreen-mode');
-
-            // Show header back only on mobile
-            if (isMobile && header) {
-                header.style.display = 'block';
-            }
 
             isFullscreen = false;
 
@@ -230,3 +218,7 @@
     pdfIframe.addEventListener('contextmenu', function(e) {
         e.preventDefault();
     });
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+        toggleFullscreen()    
+    })
