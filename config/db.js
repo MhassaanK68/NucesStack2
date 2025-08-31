@@ -8,7 +8,12 @@ const sequelize = new Sequelize(
   {
     host: process.env.MYSQLHOST,
     dialect: 'mysql',
-    port: process.env.MYSQLPORT
+    port: process.env.MYSQLPORT,
+    dialectOptions: {
+      ssl: {
+        rejectUnauthorized: true, // ensures secure connection
+      }
+    }
   }
 );
 

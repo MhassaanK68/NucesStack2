@@ -1,35 +1,20 @@
 const Sequelize = require('sequelize');
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('notes', {
+  return sequelize.define('chapters', {
     id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
-    title: {
+    name: {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    type: {
-      type: DataTypes.ENUM('pdf','video'),
-      allowNull: false
-    },
-    url: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    chapter_id: {
-      type: DataTypes.INTEGER,
+    slug: {
+      type: DataTypes.STRING(255),
       allowNull: false,
-      references: {
-        model: 'chapters',
-        key: 'id'
-      }
+      unique: "slug"
     },
     subject_id: {
       type: DataTypes.INTEGER,
@@ -38,18 +23,10 @@ module.exports = function(sequelize, DataTypes) {
         model: 'subjects',
         key: 'id'
       }
-    },
-    semester_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'semesters',
-        key: 'id'
-      }
     }
   }, {
     sequelize,
-    tableName: 'notes',
+    tableName: 'chapters',
     timestamps: false,
     indexes: [
       {
@@ -61,24 +38,18 @@ module.exports = function(sequelize, DataTypes) {
         ]
       },
       {
+        name: "slug",
+        unique: true,
+        using: "BTREE",
+        fields: [
+          { name: "slug" },
+        ]
+      },
+      {
         name: "fk_1",
         using: "BTREE",
         fields: [
-          { name: "chapter_id" },
-        ]
-      },
-      {
-        name: "fk_2",
-        using: "BTREE",
-        fields: [
           { name: "subject_id" },
-        ]
-      },
-      {
-        name: "fk_3",
-        using: "BTREE",
-        fields: [
-          { name: "semester_id" },
         ]
       },
     ]
