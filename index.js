@@ -44,8 +44,11 @@ sequelize.authenticate()
 
 app.get('/', async (req, res) => {
 
+  console.log("Home Page accessed by IP = [", req.ip, "]")
+
   const semesters = await models.semesters.findAll();
   res.render('main.ejs', {semesters});
+  
 })
 
 app.get('/admin', (req, res) => {
@@ -53,6 +56,7 @@ app.get('/admin', (req, res) => {
     res.redirect("/login");
     return
   }
+  console.log("Admin Panel accessed by IP = [", req.session.user.username, "]")
   res.render('admin.ejs');
 })
 
@@ -188,6 +192,7 @@ app.get('/u/:semesterSlug', async (req, res) => {
       where: { semester_id: semester.id  }
     });
 
+    console.log(`${semester.name} accessed by IP = [`, req.ip, "]")
     res.render('semester.ejs', { semester: semester, subjects });
   } 
   catch (err) {
@@ -229,6 +234,7 @@ app.get('/u/:semesterSlug/:subjectSlug', async (req, res) => {
       return res.status(404).redirect("/not-found");
     }
 
+    console.log(`${subject.name} accessed by IP = [`, req.ip, "]")
     res.render("subject", { semester, subject, notes });
 
   } catch (err) {
@@ -240,6 +246,7 @@ app.get('/u/:semesterSlug/:subjectSlug', async (req, res) => {
 // Content Viewer
 app.get('/view-notes', (req, res)=>{
   const { id } = req.query;
+  console.log(`Notes with ID ["${id}"] viewed by IP = [`, req.ip, "]")
   res.render('content-viewer.ejs', {document: id})
 })
 
