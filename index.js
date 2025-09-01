@@ -262,6 +262,7 @@ app.delete('/api/subjects/:id', adminController.deleteSubject);
 app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
 app.post('/api/notes', adminController.addNote);
 app.delete('/api/notes/:id', adminController.deleteNote);
+app.get('/api/notes/count', adminController.getNotesCount);
 
 
 app.use((req, res, next) => {

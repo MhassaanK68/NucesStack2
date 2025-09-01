@@ -80,6 +80,17 @@ async function fetchNotesForSubject(subjectId) {
   }
 }
 
+async function fetchNotesCount(semesterId) {
+  try {
+    const response = await fetch(`/api/notes/count?semester_id=${semesterId}`);
+    const data = await response.json();
+    return data.count || 0;
+  } catch (error) {
+    console.error("Error fetching notes count:", error);
+    return 0;
+  }
+}
+
 async function addSubject(name, semesterId) {
   try {
     const response = await fetch("/api/subjects", {
@@ -282,6 +293,9 @@ async function loadInitialData() {
   fillSemesterSelect();
   if (state.selectedSemester) {
     await loadSubjectsForSemester();
+  } else {
+    // Initialize counters even when no semester is selected
+    updateStatsCounters();
   }
 }
 
@@ -295,6 +309,32 @@ async function render() {
   await renderSubjectsList();
   fillSubjectSelect(noteSubject);
   fillSubjectSelect(removeNoteSubject);
+  await updateStatsCounters();
+}
+
+// Update stats counters in the overview section
+async function updateStatsCounters() {
+  const totalSubjectsEl = document.getElementById('totalSubjects');
+  const totalNotesEl = document.getElementById('totalNotes');
+  const activeSemesterEl = document.getElementById('activeSemester');
+  
+  if (totalSubjectsEl) {
+    totalSubjectsEl.textContent = state.subjects.length;
+  }
+  
+  if (totalNotesEl && state.selectedSemester) {
+    const notesCount = await fetchNotesCount(state.selectedSemester);
+    totalNotesEl.textContent = notesCount;
+  } else if (totalNotesEl) {
+    totalNotesEl.textContent = '0';
+  }
+  
+  if (activeSemesterEl && state.selectedSemester) {
+    const selectedSemester = state.semesters.find(s => s.id == state.selectedSemester);
+    activeSemesterEl.textContent = selectedSemester ? selectedSemester.name : '-';
+  } else if (activeSemesterEl) {
+    activeSemesterEl.textContent = '-';
+  }
 }
 
 // --- Event handlers ---
