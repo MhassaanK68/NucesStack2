@@ -3,6 +3,14 @@ const sequelize = require('./config/db');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 
+const adminController = require('./controllers/adminController');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const contributorsController = require('./controllers/contributorsController');
+
+
+
+
 const initModels = require("./models/init-models");
 const models = initModels(sequelize);
 
@@ -17,6 +25,7 @@ app.use(cors());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
+app.set("trust proxy", true);
 
 // Session middleware
 app.use(session({
@@ -52,12 +61,23 @@ app.get('/', async (req, res) => {
 })
 
 app.get('/admin', (req, res) => {
-  if (!req.session.user){
+
+  const usrSession = req.session.user
+
+  if (!usrSession){
     res.redirect("/login");
     return
   }
-  console.log("Admin Panel accessed by IP = [", req.session.user.username, "]")
-  res.render('admin.ejs');
+  console.log("Admin Panel accessed by IP = [",usrSession, "]")
+  if (usrSession.role == "admin"){
+    res.render('admin.ejs');
+  }
+  else if (usrSession.role == "contributor"){
+    res.render('contributor.ejs');
+  }
+  else{
+    res.send("who are you?");
+  }
 })
 
 app.get('/login', (req, res) => {
@@ -96,7 +116,8 @@ app.post('/login', async (req, res) => {
     // Set session
     req.session.user = {
       id: admin.id,
-      username: admin.username
+      username: admin.username,
+      role: admin.role
     };
 
     res.redirect('/admin');
@@ -252,7 +273,7 @@ app.get('/view-notes', (req, res)=>{
 
 // API Routes for Admin Panel
 // Import admin controller
-const adminController = require('./controllers/adminController');
+
 
 // Admin API routes
 app.get('/api/semesters', adminController.getSemesters);
@@ -263,6 +284,13 @@ app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
 app.post('/api/notes', adminController.addNote);
 app.delete('/api/notes/:id', adminController.deleteNote);
 app.get('/api/notes/count', adminController.getNotesCount);
+app.post('/upload', upload.single('file'), contributorsController.uploadNotes);
+app.post('/api/upload-notes', (req, res) => {
+  res.send("Hello from upload notes endpoint");
+});
+
+
+
 
 
 app.use((req, res, next) => {

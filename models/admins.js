@@ -14,6 +14,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
+    },
+    role: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,

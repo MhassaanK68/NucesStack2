@@ -38,6 +38,11 @@ module.exports = function(sequelize, DataTypes) {
     video_id: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    approved: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: true
     }
   }, {
     sequelize,
