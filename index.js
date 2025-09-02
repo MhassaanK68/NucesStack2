@@ -280,7 +280,7 @@ app.post('/admin/deny-note/:id', adminController.denyNote);
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
 app.post('/api/upload-for-approval', (req, res) => {
-  const pdf_id = req.body.shareLink;
+  let pdf_id = req.body.shareLink;
   const title = req.body.title;
   const semester_id = req.body.SemesterID;
   const subject_id = req.body.SubjectID;
