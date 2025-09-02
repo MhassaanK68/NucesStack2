@@ -211,7 +211,44 @@ const adminController = {
       console.error('Error fetching notes count:', error);
       res.status(500).json({ error: 'Failed to fetch notes count' });
     }
+  },
+
+  getPendingNotes: async (req, res) => {
+    try {
+      const notes = await models.notes.findAll({
+        where: { approved: false },
+        attributes: ['id', 'title', 'description', 'pdf_id', 'video_id', 'uploader', 'semester_id', 'subject_id'],
+        order: [['id', 'ASC']]
+      });
+      res.status(200).json({ notes }); 
+    } catch (error) {
+      console.error('Error fetching pending notes:', error);
+      res.status(500).json({ error: 'Failed to fetch pending notes' });
+    }
+  },
+
+  approveNote: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await models.notes.update({ approved: true }, { where: { id } });
+      res.status(200).json({message: "note has been approved & pushed to DB"})
+    } catch (error) {
+      console.error('Error approving note:', error);
+      res.status(500).json({ error: 'Failed to approve note' });
+    }
+  },
+
+  denyNote: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await models.notes.destroy({ where: { id } });
+      res.status(200).json({message: "note has been denied & removed from DB"})
+    } catch (error) {
+      console.error('Error denying note:', error);
+      res.status(500).json({ error: 'Failed to deny note' });
+    }
   }
+
 };
 
 module.exports = adminController;

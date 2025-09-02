@@ -53,7 +53,7 @@
     <!-- Converted horizontal tabs to sidebar layout -->
     <div class="flex min-h-screen">
         <!-- Sidebar Navigation -->
-        <nav id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-color-primary/20 shadow-sm mobile-sidebar lg:transform-none">
+        <nav id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-color-primary/20 shadow-sm mobile-sidebar lg:transform-none">
             <div class="p-4 sm:p-6">
                 <!-- Added mobile close button -->
                 <div class="flex items-center justify-between mb-6 lg:hidden">
@@ -67,27 +67,28 @@
                 
                 <div class="space-y-2">
                     <button class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors active bg-color-primary text-white" data-tab="overview">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H5a2 2 0 0 0-2-2z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 5v4"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 5v4"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M16 5v4"/>
-                        </svg>
+                        <i data-lucide="chart-pie" class="w-6 h-6"></i>
                         <span class="font-medium">Overview</span>
                     </button>
                     <button class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600" data-tab="subjects">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M19 10v6a7 7 0 0 1-14 0v-6"/>
-                        </svg>
+                         <i data-lucide="book" class="w-6 h-6"></i>
                         <span class="font-medium">Subjects</span>
                     </button>
                     <button class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600" data-tab="notes">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9 12h6m-6 4h6M8 3h8a2 2 0 0 1 2 2v14l-4-3-4 3V5a2 2 0 0 1 2-2Z"/>
-                        </svg>
+                        <i class="w-6 h-6" data-lucide="notebook-pen"></i>
                         <span class="font-medium">Notes</span>
                     </button>
+                    <button class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600" data-tab="approve">
+                        <i class="w-6 h-6" data-lucide="list-check"></i>
+                        <span class="font-medium">Approve Notes</span>
+                    </button>
+                    <form action="/logout" method="POST" class="w-full">
+                        <button type="submit" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600">
+                            <i class="w-6 h-6 text-red-600" data-lucide="log-out"></i>
+                            <span class="font-medium">Logout</span>
+                        </button>
+                    </form>
+
                 </div>
             </div>
         </nav>
@@ -95,7 +96,7 @@
         <!-- Main Content Area -->
         <main class="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-0">
             <!-- Semester Selector (Always visible) -->
-            <div class="bg-white rounded-xl border border-color-primary/20 shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+            <div id="semSelect" class="bg-white rounded-xl border border-color-primary/20 shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-primary flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 color-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -168,6 +169,16 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Approve Notes Tab Content -->
+             <div id="approve" class="tab-content">
+                <div class="bg-white rounded-xl border border-color-primary/20 shadow-sm p-4 sm:p-6">
+                    <h3 class="text-base sm:text-lg lg:text-2xl font-semibold color-primary mb-4">Pending Notes for Approval</h3>
+                         <div id="pendingNotesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                             <p class="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">Loading pending notes...</p>
+                         </div>
+                </div>
+             </div>
 
             <!-- Subjects Tab Content -->
             <div id="subjects" class="tab-content">
@@ -317,6 +328,8 @@
         <div class="px-4 sm:px-6 py-3 rounded-xl bg-white shadow-lg border border-color-primary/20 color-primary text-sm font-medium max-w-sm text-center"></div>
     </div>
 
+    <script src="/js/admin-panel.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tabButtons = document.querySelectorAll('.tab-button');
@@ -382,13 +395,19 @@
                     closeSidebar();
                 }
             });
+
         });
 
-        // Placeholder for existing admin panel JavaScript functionality
-        // This would include all the original functions for managing subjects and notes
-        console.log('[v0] Admin panel redesigned with responsive sidebar functionality');
+        document.addEventListener('DOMContentLoaded', async function() {
+                
+            if (document.getElementById('pendingNotesList')) {
+                const notes = await fetchPendingNotes();
+                renderPendingNotes(notes.notes);
+            }
+            
+        });
     </script>
 
-    <script src="/js/admin-panel.js"></script>
+
 
     <%- include('partials/footer') %>

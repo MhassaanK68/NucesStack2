@@ -180,15 +180,6 @@ app.post('/login', async (req, res) => {
   }
 })
 
-// Logout endpoint
-app.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Logout error:', err);
-    }
-    res.redirect('/login');
-  });
-})
 
 // Specific Semester Page
 app.get('/u/:semesterSlug', async (req, res) => {
@@ -282,6 +273,9 @@ app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
 app.post('/api/notes', adminController.addNote);
 app.delete('/api/notes/:id', adminController.deleteNote);
 app.get('/api/notes/count', adminController.getNotesCount);
+app.get('/api/pending-notes', adminController.getPendingNotes); // returns JSON
+app.post('/admin/approve-note/:id', adminController.approveNote);
+app.post('/admin/deny-note/:id', adminController.denyNote);
 
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
@@ -295,6 +289,15 @@ app.post('/api/upload-for-approval', (req, res) => {
   if (!pdf_id || !title || !semester_id || !subject_id) {
     return res.status(400).json({ error: 'All fields are required' });
   }
+
+  const regex = /https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?id=)([a-zA-Z0-9_-]+)(?:\/view|\?.*)?/;
+  const match = pdf_id.match(regex);
+
+    if (match) {
+        pdf_id = match[1]; 
+    } else {
+         return res.status(400).json({ error: 'Google Drive Link Was Invalid!' });; // Not a valid Google Drive file link
+    }
 
   models.notes.create({
     title: title,

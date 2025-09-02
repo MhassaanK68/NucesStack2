@@ -20,6 +20,11 @@ document.addEventListener("DOMContentLoaded", function () {
       button.classList.remove("text-gray-600");
       button.classList.add("color-primary");
       document.getElementById(targetTab).classList.add("active");
+      if (targetTab === "approve") {
+        document.getElementById('semSelect').style.display = 'none';
+      }else{
+        document.getElementById('semSelect').style.display = 'block';
+      }
     });
   });
 
@@ -417,6 +422,132 @@ removeNoteBtn.addEventListener("click", async () => {
     setButtonLoading("removeNoteBtn", false);
   }
 });
+
+// --- Pending Notes Approval ---
+async function fetchPendingNotes() {
+  try {
+    const response = await fetch('/api/pending-notes');
+    if (!response.ok) throw new Error('Failed to fetch pending notes');
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+async function approveNote(id) {
+  try {
+    const response = await fetch(`/admin/approve-note/${id}`, { method: 'POST' });
+    if (!response.ok) throw new Error('Failed to approve note');
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+async function denyNote(id) {
+  try {
+    const response = await fetch(`/admin/deny-note/${id}`, { method: 'POST' });
+    if (!response.ok) throw new Error('Failed to deny note');
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+function renderPendingNotes(notes) {
+  const container = document.getElementById('pendingNotesList');
+  container.innerHTML = '';
+
+  if (!notes.length) {
+    container.innerHTML = `<p class="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">No pending notes for approval.</p>`;
+    return;
+  }
+
+  notes.forEach(note => {
+    const card = document.createElement('div');
+    card.className = 'bg-white border rounded-lg p-4 shadow flex flex-col gap-2';
+
+    card.innerHTML = `
+    <div class="bg-transparent border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+      <div class="space-y-3">
+
+        <div class="space-y-2">
+          <h4 class="font-semibold text-lg text-gray-900 leading-tight">${note.title}</h4>
+          <p class="text-sm text-gray-600 leading-relaxed">${note.description || 'No description provided'}</p>
+        </div>
+        
+        <div class="flex items-center justify-between text-base text-gray-500 pt-2 border-t border-gray-100">
+          <span class="flex items-center gap-1">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+            ${note.uploader || 'Anonymous'}
+          </span>
+          ${note.pdf_id ? `
+            <a href="https://drive.google.com/file/d/${note.pdf_id}/view" target="_blank" 
+              class="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+              </svg>
+              View PDF
+            </a>
+          ` : ''}
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex gap-2 pt-3">
+          <button class="approve-btn flex-1 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm font-medium hover:bg-green-100 hover:border-green-300 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" 
+                  data-id="${note.id}">
+            Approve
+          </button>
+          <button class="deny-btn flex-1 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1" 
+                  data-id="${note.id}">
+            Deny
+          </button>
+        </div>
+      </div>
+    </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  // Add event listeners for approve/deny buttons
+  container.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const id = btn.getAttribute('data-id');
+      const success = await approveNote(id);
+      if (success) {
+        btn.closest('.bg-white').remove();
+      } else {
+        btn.disabled = false;
+        alert('Failed to approve note.');
+      }
+    });
+  });
+
+  container.querySelectorAll('.deny-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      const id = btn.getAttribute('data-id');
+      const success = await denyNote(id);
+      if (success) {
+        btn.closest('.bg-white').remove();
+      } else {
+        btn.disabled = false;
+        alert('Failed to deny note.');
+      }
+    });
+  });
+}
+
+
+
+
 
 // init
 loadInitialData();

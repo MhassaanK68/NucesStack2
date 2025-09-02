@@ -19,8 +19,8 @@ exports.uploadNotes = async (req, res) => {
     const formData = new FormData();
     formData.append("file", fs.createReadStream(file.path), file.originalname);
     formData.append("title", title);
-    formData.append("semester", semester);
-    formData.append("subject", subject);
+    formData.append("semester", parseInt(semester));
+    formData.append("subject", parseInt(subject));
     formData.append("uploader", req.session.user ? req.session.user.username : 'anonymous');
 
     const response = await fetch(WebhookURL, {
@@ -36,9 +36,9 @@ exports.uploadNotes = async (req, res) => {
       if (err) console.error("Error deleting file:", err);
     });
 
-    res.send("✅ Notes uploaded and sent to Zapier!");
+    res.redirect("/admin");
   } catch (err) {
     console.error(err);
-    res.status(500).send("❌ Upload failed. ");
+    res.status(500).redirect("/admin");;
   }
 };
