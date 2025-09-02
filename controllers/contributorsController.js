@@ -6,10 +6,6 @@ const FormData = require("form-data");
 
 exports.uploadNotes = async (req, res) => {
   try {
-
-    console.log('title:', req.body.title);
-    console.log('semester:', req.body.semester);
-    console.log('subject:', req.body.subject);
       
     const file = req.file;
     const title = req.body.title;
@@ -25,6 +21,7 @@ exports.uploadNotes = async (req, res) => {
     formData.append("title", title);
     formData.append("semester", semester);
     formData.append("subject", subject);
+    formData.append("uploader", req.session.user ? req.session.user.username : 'anonymous');
 
     const response = await fetch(WebhookURL, {
       method: "POST",

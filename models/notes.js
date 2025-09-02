@@ -43,6 +43,10 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BOOLEAN,
       allowNull: true,
       defaultValue: true
+    },
+    uploader: {
+      type: DataTypes.STRING(50),
+      allowNull: true
     }
   }, {
     sequelize,

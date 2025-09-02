@@ -159,7 +159,9 @@ const adminController = {
         subject_id,
         semester_id,
         pdf_id: NoteID,
-        video_id
+        video_id,
+        approved: true,
+        uploader: req.session.user ? req.session.user.username : 'anonymous'
       });
       
       console

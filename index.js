@@ -245,7 +245,8 @@ app.get('/u/:semesterSlug/:subjectSlug', async (req, res) => {
 
     // Find notes inside the subject
     const notes = await models.notes.findAll({
-      where: { subject_id: subject.id, semester_id: semester.id },
+      where: { subject_id: subject.id, semester_id: semester.id , approved: true},
+      attributes: ['id', 'title', 'pdf_id', 'video_id', 'description']
     })
 
     if (!subject) {
@@ -281,10 +282,36 @@ app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
 app.post('/api/notes', adminController.addNote);
 app.delete('/api/notes/:id', adminController.deleteNote);
 app.get('/api/notes/count', adminController.getNotesCount);
+
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
 app.post('/api/upload-for-approval', (req, res) => {
-  res.send(req.body);
+  const pdf_id = req.body.shareLink;
+  const title = req.body.title;
+  const semester_id = req.body.SemesterID;
+  const subject_id = req.body.SubjectID;
+  const uploader = req.body.uploader;
+
+  if (!pdf_id || !title || !semester_id || !subject_id) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  models.notes.create({
+    title: title,
+    pdf_id: pdf_id,
+    semester_id: semester_id,
+    subject_id: subject_id,
+    approved: false,
+    uploader: uploader || 'anonymous'
+  })
+  .then(note => {
+    res.json({ message: 'Upload successful and pending approval', note });
+  }).catch(err => {
+    console.error('Error uploading for approval:', err);
+    res.status(500).json({ error: 'Upload failed' });
+  });
+
+
 });
 
 
