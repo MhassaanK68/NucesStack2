@@ -7,26 +7,32 @@ const FormData = require("form-data");
 exports.uploadNotes = async (req, res) => {
   try {
 
-    console.log()
-
+    console.log('title:', req.body.title);
+    console.log('semester:', req.body.semester);
+    console.log('subject:', req.body.subject);
+      
     const file = req.file;
-    const title = req.body.title || "No Title";
+    const title = req.body.title;
+    const semester = req.body.semester;
+    const subject = req.body.subject;
 
-    // Zapier webhook URL
-    const zapierWebhookURL = "https://eoe5ko3v6i5j0de.m.pipedream.net";
 
-    // Create form-data to send actual file
+    const WebhookURL = "https://eoe5ko3v6i5j0de.m.pipedream.net";
+
+
     const formData = new FormData();
     formData.append("file", fs.createReadStream(file.path), file.originalname);
     formData.append("title", title);
+    formData.append("semester", semester);
+    formData.append("subject", subject);
 
-    const response = await fetch(zapierWebhookURL, {
+    const response = await fetch(WebhookURL, {
       method: "POST",
       body: formData,
       headers: formData.getHeaders(),
     });
 
-    if (!response.ok) throw new Error(`Zapier returned ${response.status}`);
+    if (!response.ok) throw new Error(`PipeDream returned ${response.status}`);
 
     // ✅ Delete local file after sending to Zapier
     fs.unlink(file.path, (err) => {

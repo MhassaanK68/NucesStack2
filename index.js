@@ -1,14 +1,11 @@
 const express = require('express');
 const sequelize = require('./config/db');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
 
 const adminController = require('./controllers/adminController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const contributorsController = require('./controllers/contributorsController');
-
-
 
 
 const initModels = require("./models/init-models");
@@ -284,9 +281,10 @@ app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
 app.post('/api/notes', adminController.addNote);
 app.delete('/api/notes/:id', adminController.deleteNote);
 app.get('/api/notes/count', adminController.getNotesCount);
-app.post('/upload', upload.single('file'), contributorsController.uploadNotes);
-app.post('/api/upload-notes', (req, res) => {
-  res.send("Hello from upload notes endpoint");
+app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
+
+app.post('/api/upload-for-approval', (req, res) => {
+  res.send(req.body);
 });
 
 
