@@ -144,12 +144,33 @@ async function deleteNote(id) {
 // --- Helpers ---
 // Displays a temporary toast message to the user for feedback.
 // Usage: toast("Your message here");
-function toast(msg) {
-    const t = document.getElementById("toast");
-    t.querySelector("div").textContent = msg;
-    t.classList.remove("hidden");
-    setTimeout(() => t.classList.add("hidden"), 1600);
+// Show/hide controller (no custom CSS needed)
+function toast(message, type = "success", timeout = 3000) {
+  const wrapper = document.getElementById("toast");
+  const panel = document.getElementById("toast-panel");
+  const icon = document.getElementById("toast-icon");
+  const msg = document.getElementById("toast-message");
+
+  msg.textContent = message;
+  // swap icon color by type
+  icon.classList.remove("text-green-400", "text-red-400");
+  icon.classList.add(type === "error" ? "text-red-400" : "text-green-400");
+
+  // reveal + animate in
+  wrapper.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    panel.classList.remove("translate-y-6", "sm:-translate-y-6", "opacity-0");
+  });
+
+  // auto-hide
+  clearTimeout(panel._hideTimer);
+  panel._hideTimer = setTimeout(() => {
+    panel.classList.add("opacity-0", "translate-y-6", "sm:-translate-y-6");
+    setTimeout(() => wrapper.classList.add("hidden"), 300);
+  }, timeout);
 }
+
+
 
 // Sets a button to a loading state by toggling visibility of spinner and text.
 // Expects the button to contain elements with classes 'loading-spinner' and 'btn-text'.
@@ -212,7 +233,7 @@ addNoteBtn.addEventListener("click", async () => {
 const lockedBtns = document.querySelectorAll(".locked-for-contributors");
 lockedBtns.forEach(btn => {
     btn.addEventListener("click", () => {
-        toast("🔒 Locked");
+        toast("This Tab is Locked for Contributors", "error");
     });
 });
 
@@ -235,6 +256,10 @@ async function fillNotesForSubject(subjectId, el) {
         el.appendChild(opt);
     });
 }
+
+document.getElementById("upload-your-notes-form").addEventListener("submit", function(e) {
+    toast("Uploading... Please wait.");
+});
 
 
 

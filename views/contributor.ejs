@@ -13,9 +13,6 @@
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/css/admin.css">
-    <script>
-
-    </script>
 </head>
 
 <body class="font-body bg-primary antialiased">
@@ -95,7 +92,8 @@
                         </button>
 
                         <form action="/logout" method="POST" class="w-full">
-                            <button type="submit" class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600">
+                            <button type="submit"
+                                class="tab-button w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left hover:bg-primary transition-colors text-gray-600">
                                 <i class="w-6 h-6 text-red-600" data-lucide="log-out"></i>
                                 <span class="font-medium">Logout</span>
                             </button>
@@ -110,7 +108,7 @@
                 <!-- Notes Tab Content -->
                 <div id="notes" data-tab="notes" class="tab-content max-w-4xl mx-auto">
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                        
+
                         <div class="bg-gradient-to-r from-purple-400 to-purple-100 px-6 py-5 border-b border-gray-100">
                             <div class="flex items-center gap-2">
                                 <div class="h-12 w-12 rounded-xl flex items-center justify-center">
@@ -123,21 +121,29 @@
                         </div>
 
                         <div class="p-6 lg:p-8">
-                            <form method="POST" action="/contribute/upload-your-notes" enctype="multipart/form-data" class="space-y-8">
-                                
-                                <div class="space-y-6">                    
+                            <form id="upload-your-notes-form" method="POST" action="/contribute/upload-your-notes"
+                                enctype="multipart/form-data" class="space-y-8">
+
+                                <div class="space-y-6">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
-                                            <label class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Current Semester</label>
-                                            <select name="semester" id="semesterSelect" class="w-full px-4 pb-3 text-base bg-transparent border-none focus:outline-none focus:ring-0">
+                                        <div
+                                            class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Current
+                                                Semester</label>
+                                            <select name="semester" id="semesterSelect"
+                                                class="w-full px-4 pb-3 text-base bg-transparent border-none focus:outline-none focus:ring-0">
                                                 <option value="">Select your semester...</option>
 
                                             </select>
                                         </div>
 
-                                        <div class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
-                                            <label class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Subject</label>
-                                            <select required name="subject" id="noteSubject" class="w-full px-4 pb-3 text-base bg-transparent border-none focus:outline-none focus:ring-0">
+                                        <div
+                                            class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Subject</label>
+                                            <select required name="subject" id="noteSubject"
+                                                class="w-full px-4 pb-3 text-base bg-transparent border-none focus:outline-none focus:ring-0">
                                                 <option value="">Choose a subject...</option>
                                             </select>
                                         </div>
@@ -146,34 +152,52 @@
 
                                 <div class="space-y-6">
                                     <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                         Note Details
                                     </h3>
 
-                                    <div class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
-                                        <label class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Note Title *</label>
+                                    <div
+                                        class="form-field-focus rounded-lg border border-gray-300 transition-all duration-200">
+                                        <label class="block text-sm font-medium text-gray-700 px-4 pt-3 pb-1">Note Title
+                                            *</label>
                                         <input id="noteTitle" name="title" type="text" required
                                             class="w-full px-4 pb-3 text-base bg-transparent border-none focus:outline-none focus:ring-0"
                                             placeholder="eg. Applications of Triple Integral" />
                                     </div>
 
                                     <div class="relative">
-                                        <input id="dropzone-file" type="file" name="file" accept=".pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required />
-                                        <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-xl p-8 lg:p-12 text-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group">
+                                        <input id="dropzone-file" type="file" name="file" accept=".pdf"
+                                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            required />
+                                        <div id="upload-area"
+                                            class="border-2 border-dashed border-gray-300 rounded-xl p-8 lg:p-12 text-center hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 group">
                                             <div id="upload-content">
-                                                <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-                                                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                                <div
+                                                    class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                                                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Drop your PDF here</h4>
-                                                <p class="text-gray-600 mb-4">or <span class="text-blue-500 font-medium">browse files</span> from your device</p>
-                                                <div class="flex items-center justify-center gap-4 text-sm text-gray-500">
+                                                <h4 class="text-lg font-semibold text-gray-900 mb-2">Drop your PDF here
+                                                </h4>
+                                                <p class="text-gray-600 mb-4">or <span
+                                                        class="text-blue-500 font-medium">browse files</span> from your
+                                                    device</p>
+                                                <div
+                                                    class="flex items-center justify-center gap-4 text-sm text-gray-500">
                                                     <span class="flex items-center gap-1">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                         </svg>
                                                         PDF only
                                                     </span>
@@ -181,16 +205,22 @@
                                                     <span>Max 10 MB</span>
                                                 </div>
                                             </div>
-                                            
+
                                             <div id="file-selected" class="hidden">
-                                                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                                                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                <div
+                                                    class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                                    <svg class="w-8 h-8 text-green-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-lg font-semibold text-gray-900 mb-2">File Ready to Upload</h4>
+                                                <h4 class="text-lg font-semibold text-gray-900 mb-2">File Ready to
+                                                    Upload</h4>
                                                 <p id="file-name" class="text-gray-600 mb-4"></p>
-                                                <button type="button" id="remove-file" class="text-red-500 hover:text-red-700 text-sm font-medium">
+                                                <button type="button" id="remove-file"
+                                                    class="text-red-500 hover:text-red-700 text-sm font-medium">
                                                     Remove file
                                                 </button>
                                             </div>
@@ -202,15 +232,20 @@
 
 
                                 <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100">
-                                    <button id="addNoteBtn" type="submit" class="flex-1 px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                                    <button id="addNoteBtn" type="submit"
+                                        class="flex-1 px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
                                         <span class="btn-text">Upload Note</span>
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                         </svg>
                                         <div class="loading-spinner hidden">
                                             <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                    stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                </path>
                                             </svg>
                                         </div>
                                     </button>
@@ -223,15 +258,29 @@
             </main>
         </div>
 
-        <!-- Toast Notification -->
-        <div id="toast" class="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 hidden z-50 w-full max-w-xs sm:max-w-sm px-4">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-white text-gray-900 shadow-lg border border-gray-200">
-                <svg class="w-4 h-4 flex-shrink-0 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <p id="toast-message" class="text-sm font-medium text-gray-800 flex-1"></p>
-            </div>
+
+        <!-- Toast wrapper handles positioning -->
+        <div id="toast"
+            class="fixed inset-x-0 bottom-4 sm:bottom-auto sm:top-4 sm:right-4 sm:inset-x-auto
+                    z-50 hidden px-4 flex justify-center sm:justify-end">
+
+        <!-- Toast panel -->
+        <div id="toast-panel"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800 backdrop-blur
+                    shadow-lg border border-gray-200 w-fit pointer-events-auto
+                    transition-all duration-300
+                    translate-y-6 sm:-translate-y-6 opacity-0">
+
+            <svg id="toast-icon" class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0 text-green-300"
+                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="8" />
+            </svg>
+
+            <p id="toast-message" class="text-base md:text-lg font-medium text-white"></p>
         </div>
+        </div>
+
+
 
 
         <script>
@@ -362,6 +411,13 @@
                         dropzoneFile.dispatchEvent(event);
                     }
                 });
+
+                const params = new URLSearchParams(window.location.search);
+                if (params.get("status") === "success") {
+                    toast("Notes sent for review. Thank you for your contribution!");
+                } else if (params.get("status") === "error") {
+                    toast("Something unexpected happened, please try again later.", "error");
+                }
 
             });
 

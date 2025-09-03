@@ -155,12 +155,33 @@ async function deleteNote(id) {
   }
 }
 
-function toast(msg) {
-  const t = document.getElementById("toast");
-  t.querySelector("div").textContent = msg;
-  t.classList.remove("hidden");
-  setTimeout(() => t.classList.add("hidden"), 1600);
+// Show/hide controller (no custom CSS needed)
+function toast(message, type = "success", timeout = 3000) {
+  const wrapper = document.getElementById("toast");
+  const panel = document.getElementById("toast-panel");
+  const icon = document.getElementById("toast-icon");
+  const msg = document.getElementById("toast-message");
+
+  msg.textContent = message;
+  // swap icon color by type
+  icon.classList.remove("text-green-400", "text-red-400");
+  icon.classList.add(type === "error" ? "text-red-400" : "text-green-400");
+
+  // reveal + animate in
+  wrapper.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    panel.classList.remove("translate-y-6", "sm:-translate-y-6", "opacity-0");
+  });
+
+  // auto-hide
+  clearTimeout(panel._hideTimer);
+  panel._hideTimer = setTimeout(() => {
+    panel.classList.add("opacity-0", "translate-y-6", "sm:-translate-y-6");
+    setTimeout(() => wrapper.classList.add("hidden"), 300);
+  }, timeout);
 }
+
+
 
 // --- State management ---
 let state = {
@@ -247,9 +268,9 @@ async function renderSubjectsList() {
       try {
         await deleteSubject(id);
         await loadSubjectsForSemester();
-        toast("Subject removed");
+        toast("Subject has been removed!");
       } catch (error) {
-        toast("Failed to remove subject");
+        toast("Something went wrong trying to remove a subject", "error");
       }
     });
   });
@@ -355,17 +376,17 @@ semesterSelect.addEventListener("change", async () => {
 
 addSubjectBtn.addEventListener("click", async () => {
   const name = subjectName.value.trim();
-  if (!name) return toast("Enter a subject name");
-  if (!state.selectedSemester) return toast("Select a semester first");
+  if (!name) return toast("Enter a subject name", "error");
+  if (!state.selectedSemester) return toast("Select a semester first", "error");
 
   setButtonLoading("addSubjectBtn", true);
   try {
     await addSubject(name, state.selectedSemester);
     subjectName.value = "";
     await loadSubjectsForSemester();
-    toast("Subject added");
+    toast("Subject has been added!");
   } catch (error) {
-    toast("Failed to add subject");
+    toast("Somewthing went wrong trying to add a subject", "error");
   } finally {
     setButtonLoading("addSubjectBtn", false);
   }
@@ -378,8 +399,8 @@ addNoteBtn.addEventListener("click", async () => {
   const pdfId = notePdfId.value.trim();
   const videoId = noteVideoId.value.trim();
 
-  if (!sid) return toast("Select a subject");
-  if (!title) return toast("Enter a note title");
+  if (!sid) return toast("Please select a subject!", "error");
+  if (!title) return toast("Please enter a note title", "error");
 
   setButtonLoading("addNoteBtn", true);
   try {
@@ -391,9 +412,9 @@ addNoteBtn.addEventListener("click", async () => {
     // Clear cached notes for this subject
     delete state.subjectNotes[sid];
     await loadSubjectsForSemester();
-    toast("Note added");
+    toast("Notes have been added!");
   } catch (error) {
-    toast("Failed to add note");
+    toast("Something went wrong trying to add notes!", "error");
   } finally {
     setButtonLoading("addNoteBtn", false);
   }
@@ -415,9 +436,9 @@ removeNoteBtn.addEventListener("click", async () => {
     delete state.subjectNotes[sid];
     await loadSubjectsForSemester();
     await fillNotesForSubject(sid, removeNoteSelect);
-    toast("Note removed");
+    toast("Notes have been removed");
   } catch (error) {
-    toast("Failed to remove note");
+    toast("Something went wrong trying to remove notes", "error");
   } finally {
     setButtonLoading("removeNoteBtn", false);
   }
@@ -522,10 +543,11 @@ function renderPendingNotes(notes) {
       const id = btn.getAttribute('data-id');
       const success = await approveNote(id);
       if (success) {
+        toast('Notes have been approved!');
         btn.closest('.bg-white').remove();
       } else {
         btn.disabled = false;
-        alert('Failed to approve note.');
+        toast('Something went wrong trying to approve these notes.', "error");
       }
     });
   });
@@ -536,10 +558,11 @@ function renderPendingNotes(notes) {
       const id = btn.getAttribute('data-id');
       const success = await denyNote(id);
       if (success) {
+        toast('Notes have been disapproved!', "error");
         btn.closest('.bg-white').remove();
       } else {
         btn.disabled = false;
-        alert('Failed to deny note.');
+        toast('Something went wrong trying to disapprove these notes.', "error");
       }
     });
   });

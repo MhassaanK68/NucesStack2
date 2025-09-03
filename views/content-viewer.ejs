@@ -89,7 +89,7 @@
 
         .pdf-frame {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 16px;
+            border-radius: 0px;
             overflow: hidden;
             transform-origin: center;
         }
@@ -205,29 +205,31 @@
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 50 !important;
+            z-index: 9999 !important;
             margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .fullscreen-mode .pdf-iframe-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+        }
+
+        .fullscreen-mode iframe {
+            width: 100% !important;
+            height: 100% !important;
             border-radius: 0 !important;
         }
 
 
-
-        .fullscreen-mode .pdf-iframe-container {
-            height: calc(100vh - 120px) !important;
-            max-height: none !important;
-        }
-
         /* Mobile Fullscreen Fix */
         @media (max-width: 768px) {
 
-   
-            #doc-view-header{
-                display: none;
-            }
 
             .fullscreen-mode {
                 padding: 0 !important;
-                /* remove any padding around PDF */
                 margin: 0 !important;
             }
 
@@ -253,41 +255,61 @@
     </style>
 
     <div class="relative flex min-h-screen flex-col pdf-container">
+
+        <header
+            class="sticky top-0 z-50 w-full border-b border-gray-300 color-primary bg-primary backdrop-blur">
+            <div class="container mx-auto flex h-14 items-center px-4">
+                <a class="flex items-center gap-2 font-bold text-lg mr-6" href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 color-primary" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M2 16V4a2 2 0 0 1 2-2h11"></path>
+                        <path
+                            d="M22 18H11a2 2 0 1 0 0 4h10.5a.5.5 0 0 0 .5-.5v-15a.5.5 0 0 0-.5-.5H11a2 2 0 0 0-2 2v12">
+                        </path>
+                        <path d="M5 14H4a2 2 0 1 0 0 4h1"></path>
+                    </svg>
+                    <span class="font-headline">Nuces Stack</span>
+                </a>
+                <div class="flex flex-1 items-center justify-end">
+                    <nav class="flex items-center">
+                        <a href="/admin">
+                            <button
+                                class="text-black bg-primary inline-flex items-center gap-2 text-sm font-medium border border-gray-300 hover:bg-gray-100 h-9 rounded-md px-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <circle cx="18" cy="15" r="3"></circle>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M10 15H6a4 4 0 0 0-4 4v2"></path>
+                                </svg>
+                                Admin Panel
+                            </button>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+
         <!-- Main Content  -->
         <main class="flex-1 relative">
             <div class="flex items-start justify-center sm:items-center p-2">
                 <div class="w-full max-w-7xl">
 
                     <!-- Enhanced PDF Viewer  -->
-                    <div id="pdf-viewer" class="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative">
+                    <div id="pdf-viewer" class="glass-effect p-4 sm:p-6 lg:p-8 relative">
 
-                        <!-- Header Section  -->
-                        <div id="doc-view-header"
-                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-                            <div class="flex items-center gap-3 sm:gap-4">
-                                <div
-                                    class="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
-                                    <i data-lucide="file-text" class="w-5 h-5 text-white"></i>
-                                </div>
-                                <div>
-                                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Document Viewer</h1>
-                                </div>
-                            </div>
-
-                            <!-- Desktop Quick Actions  -->
-                            <div class="hidden sm:flex items-center gap-2 lg:gap-3">
-                                <button onclick="refreshPDF()"
-                                    class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                    <span class="hidden lg:inline">Refresh</span>
-                                </button>
-                                <button onclick="toggleFullscreen()"
-                                    class="control-btn bg-white/20 hover:bg-white/30 text-gray-700 px-3 lg:px-4 py-2 rounded-xl flex items-center gap-2 border border-white/30 text-sm">
-                                    <i data-lucide="expand" class="w-4 h-4"></i>
-                                    <span class="hidden lg:inline">Fullscreen</span>
-                                </button>
-                            </div>
+                        <!-- Floating Controls -->
+                        <div class="floating-controls flex gap-2">
+                            <button onclick="refreshPDF()"
+                                class="control-btn bg-white/90 hover:bg-white text-gray-700 px-3 py-2 rounded-xl flex items-center gap-2 border border-gray-300 shadow-md">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="toggleFullscreen()"
+                                class="control-btn bg-white/90 hover:bg-white text-gray-700 px-3 py-2 rounded-xl flex items-center gap-2 border border-gray-300 shadow-md">
+                                <i data-lucide="expand" class="w-4 h-4"></i>
+                            </button>
                         </div>
+
 
                         <!-- PDF Container  -->
                         <div class="relative">
@@ -328,7 +350,7 @@
                                 <div class="pdf-iframe-container">
                                     <iframe id="pdf-iframe"
                                         src="https://drive.google.com/file/d/<%= document %>/preview"
-                                        class="w-full h-full border-0 rounded-2xl" onload="hideLoading()"
+                                        class="w-full h-full border-0" onload="hideLoading()"
                                         onerror="showError()" allow="autoplay"
                                         sandbox="allow-same-origin allow-scripts">
                                     </iframe>
@@ -367,17 +389,6 @@
         <div class="mobile-controls p-4 sm:hidden">
             <div
                 class="bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl border border-white/30 flex items-center gap-3">
-                <button onclick="zoomOut()"
-                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
-                </button>
-                <div class="zoom-display min-w-[50px] text-center">
-                    <span id="mobile-zoom-level" class="text-sm font-semibold text-gray-700">100%</span>
-                </div>
-                <button onclick="zoomIn()"
-                    class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                </button>
                 <div class="w-px h-6 bg-gray-300 mx-1"></div>
                 <button onclick="refreshPDF()"
                     class="control-btn bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center">

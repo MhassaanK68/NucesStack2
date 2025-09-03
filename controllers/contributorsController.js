@@ -36,9 +36,9 @@ exports.uploadNotes = async (req, res) => {
       if (err) console.error("Error deleting file:", err);
     });
 
-    res.redirect("/admin");
+    res.redirect("/admin?status=success");
   } catch (err) {
     console.error(err);
-    res.status(500).redirect("/admin");;
+    res.redirect("/admin?status=error");
   }
 };

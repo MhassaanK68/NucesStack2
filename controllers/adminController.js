@@ -203,7 +203,7 @@ const adminController = {
       }
       
       const count = await models.notes.count({
-        where: { semester_id }
+        where: { semester_id, approved: true }
       });
       
       res.json({ count });
