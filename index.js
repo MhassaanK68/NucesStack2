@@ -1,21 +1,24 @@
+// Basic Packages
 const express = require('express');
 const sequelize = require('./config/db');
 const session = require('express-session');
-
-const adminController = require('./controllers/adminController');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+
+// Controllers
 const contributorsController = require('./controllers/contributorsController');
+const adminController = require('./controllers/adminController');
 
-
+// Database and Models
 const initModels = require("./models/init-models");
 const models = initModels(sequelize);
 
+// App Settings
 require('dotenv').config();
 const cors = require('cors')
-
 const app = express();
 
+// Basic Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(cors());
@@ -24,7 +27,7 @@ app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
 app.set("trust proxy", true);
 
-// Session middleware
+// Session Middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'nucesstack',
   resave: false,
@@ -278,47 +281,6 @@ app.post('/admin/approve-note/:id', adminController.approveNote);
 app.post('/admin/deny-note/:id', adminController.denyNote);
 
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
-
-app.post('/api/upload-for-approval', (req, res) => {
-  let pdf_id = req.body.shareLink;
-  const title = req.body.title;
-  const semester_id = req.body.SemesterID;
-  const subject_id = req.body.SubjectID;
-  const uploader = req.body.uploader;
-
-  if (!pdf_id || !title || !semester_id || !subject_id) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  const regex = /https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?id=)([a-zA-Z0-9_-]+)(?:\/view|\?.*)?/;
-  const match = pdf_id.match(regex);
-
-    if (match) {
-        pdf_id = match[1]; 
-    } else {
-         return res.status(400).json({ error: 'Google Drive Link Was Invalid!' });; // Not a valid Google Drive file link
-    }
-
-  models.notes.create({
-    title: title,
-    pdf_id: pdf_id,
-    semester_id: semester_id,
-    subject_id: subject_id,
-    approved: false,
-    uploader: uploader || 'anonymous'
-  })
-  .then(note => {
-    res.json({ message: 'Upload successful and pending approval', note });
-  }).catch(err => {
-    console.error('Error uploading for approval:', err);
-    res.status(500).json({ error: 'Upload failed' });
-  });
-
-
-});
-
-
-
 
 
 app.use((req, res, next) => {

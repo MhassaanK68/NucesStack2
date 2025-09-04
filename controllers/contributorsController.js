@@ -2,36 +2,62 @@ const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const fs = require("fs");
-const FormData = require("form-data");
+
+const sequelize = require('../config/db');
+const initModels = require("../models/init-models");
+const models = initModels(sequelize);
+
 
 exports.uploadNotes = async (req, res) => {
+
+  if (!req.session.user) {
+    res.redirect("/login");
+  }
+
   try {
-      
     const file = req.file;
     const title = req.body.title;
-    const semester = req.body.semester;
-    const subject = req.body.subject;
+    const semester_id = req.body.semester;
+    const subject_id = req.body.subject;
 
+    const WebhookURL = "https://script.google.com/macros/s/AKfycbwZtBvFxOh5dGFP9FKg1j9sbJYZ3c9mkxCsZk5bLDq3v3EtxQTHEEgD2QQZUfoMRUQ/exec";
+    const apiKey = process.env.GOOGLE_API_KEY;
 
-    const WebhookURL = "https://eoe5ko3v6i5j0de.m.pipedream.net";
+    // Read PDF file and convert to base64
+    const fileBuffer = fs.readFileSync(file.path);
+    const base64String = fileBuffer.toString("base64");
 
-
-    const formData = new FormData();
-    formData.append("file", fs.createReadStream(file.path), file.originalname);
-    formData.append("title", title);
-    formData.append("semester", parseInt(semester));
-    formData.append("subject", parseInt(subject));
-    formData.append("uploader", req.session.user ? req.session.user.username : 'anonymous');
-
+    // Send to Google Apps Script
     const response = await fetch(WebhookURL, {
       method: "POST",
-      body: formData,
-      headers: formData.getHeaders(),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        key: apiKey,
+        file: base64String,
+        filename: file.originalname,
+        mimeType: file.mimetype,
+      }),
     });
 
-    if (!response.ok) throw new Error(`PipeDream returned ${response.status}`);
+    if (!response.ok) throw new Error(`Apps Script returned ${response.status}`);
 
-    // ✅ Delete local file after sending to Zapier
+    const result = await response.json();
+    if (result.success != true) throw new Error(`Apps Script error: ${result.message}`);
+
+    pdf_id = result.fileId
+
+
+    // Save to DB here (title, semester, subject, result.webViewLink)
+    models.notes.create({
+      title: title,
+      pdf_id: pdf_id,
+      semester_id: semester_id,
+      subject_id: subject_id,
+      approved: false,
+      uploader: req.session.user.username || 'anonymous'
+    })
+
+    // Cleanup local temp file
     fs.unlink(file.path, (err) => {
       if (err) console.error("Error deleting file:", err);
     });

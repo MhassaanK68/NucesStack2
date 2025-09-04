@@ -1,6 +1,7 @@
 var DataTypes = require("sequelize").DataTypes;
 var _admins = require("./admins");
 var _chapters = require("./chapters");
+var _metadata = require("./metadata");
 var _notes = require("./notes");
 var _semesters = require("./semesters");
 var _subjects = require("./subjects");
@@ -8,6 +9,7 @@ var _subjects = require("./subjects");
 function initModels(sequelize) {
   var admins = _admins(sequelize, DataTypes);
   var chapters = _chapters(sequelize, DataTypes);
+  var metadata = _metadata(sequelize, DataTypes);
   var notes = _notes(sequelize, DataTypes);
   var semesters = _semesters(sequelize, DataTypes);
   var subjects = _subjects(sequelize, DataTypes);
@@ -24,6 +26,7 @@ function initModels(sequelize) {
   return {
     admins,
     chapters,
+    metadata,
     notes,
     semesters,
     subjects,
