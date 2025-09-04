@@ -4,6 +4,7 @@ const sequelize = require('./config/db');
 const session = require('express-session');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
+const jwt = require('jsonwebtoken');
 
 // Controllers
 const contributorsController = require('./controllers/contributorsController');
@@ -38,6 +39,46 @@ app.use(session({
   }
 }));
 
+// JWT Authentication Middleware
+const authMiddleware = (req, res, next) => {
+  // Get token from Authorization header
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ 
+      error: 'Access denied. No token provided.',
+      message: 'Authorization header with Bearer token is required'
+    });
+  }
+
+  // Extract token from "Bearer <token>"
+  const token = authHeader.substring(7);
+
+  try {
+    // Verify token using JWT_SECRET from environment variables
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // Add decoded token data to request object
+    next(); // Continue to next middleware/route handler
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(403).json({ 
+        error: 'Token expired',
+        message: 'Please request a new token'
+      });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(403).json({ 
+        error: 'Invalid token',
+        message: 'Token is malformed or invalid'
+      });
+    } else {
+      return res.status(403).json({ 
+        error: 'Token verification failed',
+        message: 'Unable to verify token'
+      });
+    }
+  }
+};
+
 // Error Logging Middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err.stack);
@@ -49,7 +90,39 @@ sequelize.authenticate()
   .then(() => console.log('✅ Connected to MySQL'))
   .catch(err => console.error('❌ DB connection error:', err));
 
+// JWT Token Generation Route
+app.get('/get-token', (req, res) => {
+  try {
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ 
+        error: 'Server configuration error',
+        message: 'JWT_SECRET not configured'
+      });
+    }
 
+    // Generate JWT token with empty payload and 5-minute expiration
+    const token = jwt.sign(
+      {}, // Empty payload as requested
+      process.env.JWT_SECRET, // Secret from environment variables
+      { expiresIn: '5m' } // Token expires in 5 minutes
+    );
+
+    console.log('New JWT token generated for IP:', req.ip);
+    
+    res.json({ 
+      token: token,
+      expiresIn: '5m',
+      message: 'Token generated successfully'
+    });
+  } catch (error) {
+    console.error('Token generation error:', error);
+    res.status(500).json({ 
+      error: 'Token generation failed',
+      message: 'Unable to generate authentication token'
+    });
+  }
+});
 
 app.get('/', async (req, res) => {
 
@@ -265,16 +338,16 @@ app.get('/view-notes', (req, res)=>{
 // Import admin controller
 
 
-// Admin API routes
-app.get('/api/semesters', adminController.getSemesters);
-app.get('/api/subjects', adminController.getSubjects);
-app.post('/api/subjects', adminController.addSubject);
-app.delete('/api/subjects/:id', adminController.deleteSubject);
-app.get('/api/subjects/:id/notes', adminController.getNotesBySubject);
-app.post('/api/notes', adminController.addNote);
-app.delete('/api/notes/:id', adminController.deleteNote);
-app.get('/api/notes/count', adminController.getNotesCount);
-app.get('/api/pending-notes', adminController.getPendingNotes); // returns JSON
+// Protected Admin API routes - All /api/* routes require JWT authentication
+app.get('/api/semesters', authMiddleware, adminController.getSemesters);
+app.get('/api/subjects', authMiddleware, adminController.getSubjects);
+app.post('/api/subjects', authMiddleware, adminController.addSubject);
+app.delete('/api/subjects/:id', authMiddleware, adminController.deleteSubject);
+app.get('/api/subjects/:id/notes', authMiddleware, adminController.getNotesBySubject);
+app.post('/api/notes', authMiddleware, adminController.addNote);
+app.delete('/api/notes/:id', authMiddleware, adminController.deleteNote);
+app.get('/api/notes/count', authMiddleware, adminController.getNotesCount);
+app.get('/api/pending-notes', authMiddleware, adminController.getPendingNotes); // returns JSON
 app.post('/admin/approve-note/:id', adminController.approveNote);
 app.post('/admin/deny-note/:id', adminController.denyNote);
 

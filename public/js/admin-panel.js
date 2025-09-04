@@ -51,13 +51,74 @@ function setButtonLoading(buttonId, isLoading) {
   }
 }
 
+// --- JWT Token Management ---
+let authToken = null;
+
+// Fetch a new JWT token from the server
+async function fetchAuthToken() {
+  try {
+    const response = await fetch('/get-token');
+    if (!response.ok) {
+      throw new Error(`Failed to get token: ${response.status}`);
+    }
+    const data = await response.json();
+    authToken = data.token;
+    console.log('New authentication token obtained');
+    return authToken;
+  } catch (error) {
+    console.error('Error fetching auth token:', error);
+    toast('Failed to get authentication token', 'error');
+    throw error;
+  }
+}
+
+// Make authenticated API request with automatic token handling
+async function authenticatedFetch(url, options = {}) {
+  // Ensure we have a token
+  if (!authToken) {
+    await fetchAuthToken();
+  }
+
+  // Add Authorization header
+  const headers = {
+    ...options.headers,
+    'Authorization': `Bearer ${authToken}`
+  };
+
+  try {
+    const response = await fetch(url, { ...options, headers });
+    
+    // If token expired, get a new one and retry
+    if (response.status === 403 || response.status === 401) {
+      console.log('Token expired or invalid, fetching new token...');
+      await fetchAuthToken();
+      
+      // Retry with new token
+      const retryHeaders = {
+        ...options.headers,
+        'Authorization': `Bearer ${authToken}`
+      };
+      return await fetch(url, { ...options, headers: retryHeaders });
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('Authenticated fetch error:', error);
+    throw error;
+  }
+}
+
 // --- API functions ---
 async function fetchSemesters() {
   try {
-    const response = await fetch("/api/semesters");
+    const response = await authenticatedFetch("/api/semesters");
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error fetching semesters:", error);
+    toast("Failed to load semesters", "error");
     return [];
   }
 }
@@ -67,42 +128,57 @@ async function fetchSubjects(semesterId = null) {
     const url = semesterId
       ? `/api/subjects?semester_id=${semesterId}`
       : "/api/subjects";
-    const response = await fetch(url);
+    const response = await authenticatedFetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error fetching subjects:", error);
+    toast("Failed to load subjects", "error");
     return [];
   }
 }
 
 async function fetchNotesForSubject(subjectId) {
   try {
-    const response = await fetch(`/api/subjects/${subjectId}/notes`);
+    const response = await authenticatedFetch(`/api/subjects/${subjectId}/notes`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error fetching notes:", error);
+    toast("Failed to load notes", "error");
     return [];
   }
 }
 
 async function fetchNotesCount(semesterId) {
   try {
-    const response = await fetch(`/api/notes/count?semester_id=${semesterId}`);
+    const response = await authenticatedFetch(`/api/notes/count?semester_id=${semesterId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     const data = await response.json();
     return data.count || 0;
   } catch (error) {
     console.error("Error fetching notes count:", error);
+    toast("Failed to load notes count", "error");
     return 0;
   }
 }
 
 async function addSubject(name, semesterId) {
   try {
-    const response = await fetch("/api/subjects", {
+    const response = await authenticatedFetch("/api/subjects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, semester_id: semesterId }),
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error adding subject:", error);
@@ -112,9 +188,12 @@ async function addSubject(name, semesterId) {
 
 async function deleteSubject(id) {
   try {
-    const response = await fetch(`/api/subjects/${id}`, {
+    const response = await authenticatedFetch(`/api/subjects/${id}`, {
       method: "DELETE",
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error deleting subject:", error);
@@ -124,7 +203,7 @@ async function deleteSubject(id) {
 
 async function addNote(title, subjectId, description, pdfId, videoId) {
   try {
-    const response = await fetch("/api/notes", {
+    const response = await authenticatedFetch("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -136,6 +215,9 @@ async function addNote(title, subjectId, description, pdfId, videoId) {
         semester_id: state.selectedSemester,
       }),
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error adding note:", error);
@@ -145,9 +227,12 @@ async function addNote(title, subjectId, description, pdfId, videoId) {
 
 async function deleteNote(id) {
   try {
-    const response = await fetch(`/api/notes/${id}`, {
+    const response = await authenticatedFetch(`/api/notes/${id}`, {
       method: "DELETE",
     });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error deleting note:", error);
@@ -463,11 +548,12 @@ removeNoteBtn.addEventListener("click", async () => {
 // --- Pending Notes Approval ---
 async function fetchPendingNotes() {
   try {
-    const response = await fetch('/api/pending-notes');
+    const response = await authenticatedFetch('/api/pending-notes');
     if (!response.ok) throw new Error('Failed to fetch pending notes');
     return await response.json();
   } catch (error) {
     console.error(error);
+    toast('Failed to load pending notes', 'error');
     return [];
   }
 }
@@ -594,5 +680,24 @@ function renderPendingNotes(notes) {
 
 
 
-// init
-loadInitialData();
+// Initialize authentication and load data
+async function initializeApp() {
+  try {
+    // Fetch authentication token first
+    await fetchAuthToken();
+    console.log('Authentication token obtained, loading initial data...');
+    
+    // Load initial data after authentication
+    await loadInitialData();
+    
+    // Load pending notes for approval tab
+    const pendingNotes = await fetchPendingNotes();
+    renderPendingNotes(pendingNotes);
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+    toast('Failed to initialize application', 'error');
+  }
+}
+
+// Initialize the application
+initializeApp();
