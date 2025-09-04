@@ -145,7 +145,7 @@ async function deleteNote(id) {
 // Displays a temporary toast message to the user for feedback.
 // Usage: toast("Your message here");
 // Show/hide controller (no custom CSS needed)
-function toast(message, type = "success", timeout = 3000) {
+function toast(message, type = "success", timeout = 6000) {
   const wrapper = document.getElementById("toast");
   const panel = document.getElementById("toast-panel");
   const icon = document.getElementById("toast-icon");

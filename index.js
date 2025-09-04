@@ -53,8 +53,6 @@ sequelize.authenticate()
 
 app.get('/', async (req, res) => {
 
-  console.log("Home Page accessed by IP = [", req.ip, "]")
-
   const semesters = await models.semesters.findAll();
   res.render('main.ejs', {semesters});
   
@@ -68,7 +66,7 @@ app.get('/admin', (req, res) => {
     res.redirect("/login");
     return
   }
-  console.log("Admin Panel accessed by IP = [",usrSession, "]")
+  console.log("Admin Panel accessed by IP = [",usrSession.username, "]")
   if (usrSession.role == "admin"){
     res.render('admin.ejs');
   }
