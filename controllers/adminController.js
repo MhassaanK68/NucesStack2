@@ -244,7 +244,6 @@ const adminController = {
       let note = models.notes.findOne({ where: { id }, attributes: ['pdf_id'] });
       await models.metadata.create({ denied_file_ids: note.pdf_id });
       await models.notes.destroy({ where: { id } });
-      await 
       res.status(200).json({message: "note has been denied & removed from DB"})
     } catch (error) {
       console.error('Error denying note:', error);
