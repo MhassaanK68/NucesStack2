@@ -181,6 +181,9 @@ function toast(message, type = "success", timeout = 3000) {
   }, timeout);
 }
 
+// ConfirmModal component is now loaded from external file
+// See: /public/js/components/ConfirmModal.js
+
 
 
 // --- State management ---
@@ -265,6 +268,13 @@ async function renderSubjectsList() {
   subjectList.querySelectorAll(".delete-sub").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.getAttribute("data-id");
+      
+      // Show confirmation dialog
+      const confirmed = await confirmDialog("Are you sure you want to delete this subject? This action cannot be undone.");
+      if (!confirmed) {
+        return;
+      }
+      
       try {
         await deleteSubject(id);
         await loadSubjectsForSemester();
@@ -429,6 +439,12 @@ removeNoteBtn.addEventListener("click", async () => {
   const nid = removeNoteSelect.value;
   if (!sid || !nid) return;
 
+  // Show confirmation dialog
+  const confirmed = await confirmDialog("Are you sure you want to delete this note? This action cannot be undone.");
+  if (!confirmed) {
+    return;
+  }
+
   setButtonLoading("removeNoteBtn", true);
   try {
     await deleteNote(nid);
@@ -554,6 +570,12 @@ function renderPendingNotes(notes) {
 
   container.querySelectorAll('.deny-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
+      // Show confirmation dialog
+      const confirmed = await confirmDialog("Are you sure you want to deny this note? This will permanently delete it from the database.");
+      if (!confirmed) {
+        return;
+      }
+      
       btn.disabled = true;
       const id = btn.getAttribute('data-id');
       const success = await denyNote(id);
