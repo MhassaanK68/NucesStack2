@@ -199,17 +199,38 @@ const adminController = {
       const { semester_id } = req.query;
       
       if (!semester_id) {
+        console.log('Missing semester_id in query parameters');
         return res.status(400).json({ error: 'semester_id is required' });
       }
       
+      console.log(`Fetching notes count for semester_id: ${semester_id}`);
+      
+      // Verify database connection
+      await sequelize.authenticate();
+      console.log('Database connection established successfully');
+      
+      // Get the count of notes for the semester
       const count = await models.notes.count({
-        where: { semester_id, approved: true }
+        where: { 
+          semester_id: parseInt(semester_id), 
+          approved: true 
+        }
       });
       
-      res.json({ count });
+      console.log(`Found ${count} notes for semester ${semester_id}`);
+      return res.json({ count });
+      
     } catch (error) {
-      console.error('Error fetching notes count:', error);
-      res.status(500).json({ error: 'Failed to fetch notes count' });
+      console.error('Error in getNotesCount:', {
+        message: error.message,
+        stack: error.stack,
+        query: req.query,
+        error: error.original ? error.original.message : 'No original error'
+      });
+      return res.status(500).json({ 
+        error: 'Failed to fetch notes count',
+        details: error.message 
+      });
     }
   },
 
@@ -241,13 +262,100 @@ const adminController = {
   denyNote: async (req, res) => {
     try {
       const { id } = req.params;
-      let note = models.notes.findOne({ where: { id }, attributes: ['pdf_id'] });
-      await models.metadata.create({ denied_file_ids: note.pdf_id });
-      await models.notes.destroy({ where: { id } });
-      res.status(200).json({message: "note has been denied & removed from DB"})
+      const note = await models.notes.findByPk(id);
+      
+      if (!note) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+
+      await note.destroy();
+      res.json({ message: 'Note denied and deleted successfully' });
     } catch (error) {
       console.error('Error denying note:', error);
       res.status(500).json({ error: 'Failed to deny note' });
+    }
+  },
+
+  // Get a single note by ID
+  getNoteById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const note = await models.notes.findByPk(id, {
+        include: [
+          {
+            model: models.subjects,
+            as: 'subject',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+
+      if (!note) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+
+      // Add subject_name to the note object for consistency
+      const noteData = note.get({ plain: true });
+      if (noteData.subject) {
+        noteData.subject_name = noteData.subject.name;
+      }
+
+      res.json(noteData);
+    } catch (error) {
+      console.error('Error fetching note:', error);
+      res.status(500).json({ error: 'Failed to fetch note' });
+    }
+  },
+  
+  // Update an existing note
+  updateNote: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { title, description, pdf_id, video_id } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ error: 'Title is required' });
+      }
+      
+      // Find the note first to ensure it exists
+      const note = await models.notes.findByPk(id);
+      if (!note) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+      
+      // Prepare update data
+      const updateData = { 
+        title, 
+        description: description || '',
+        pdf_id: pdf_id || null,
+        video_id: video_id || null
+      };
+      
+      // Update the note
+      await note.update(updateData);
+      
+      // Fetch the updated note with subject info
+      const updatedNote = await models.notes.findByPk(id, {
+        include: [
+          {
+            model: models.subjects,
+            as: 'subject',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+      
+      // Format the response
+      const responseData = updatedNote.get({ plain: true });
+      if (responseData.subject) {
+        responseData.subject_name = responseData.subject.name;
+      }
+      
+      res.json(responseData);
+      
+    } catch (error) {
+      console.error('Error updating note:', error);
+      res.status(500).json({ error: 'Failed to update note' });
     }
   }
 

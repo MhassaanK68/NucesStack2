@@ -344,9 +344,11 @@ app.get('/api/subjects', authMiddleware, adminController.getSubjects);
 app.post('/api/subjects', authMiddleware, adminController.addSubject);
 app.delete('/api/subjects/:id', authMiddleware, adminController.deleteSubject);
 app.get('/api/subjects/:id/notes', authMiddleware, adminController.getNotesBySubject);
+app.get('/api/notes/:id', authMiddleware, adminController.getNoteById);
+app.put('/api/notes/:id', authMiddleware, adminController.updateNote);
 app.post('/api/notes', authMiddleware, adminController.addNote);
 app.delete('/api/notes/:id', authMiddleware, adminController.deleteNote);
-app.get('/api/notes/count', authMiddleware, adminController.getNotesCount);
+app.get('/api/notes-count', authMiddleware, adminController.getNotesCount);
 app.get('/api/pending-notes', authMiddleware, adminController.getPendingNotes); // returns JSON
 app.post('/admin/approve-note/:id', adminController.approveNote);
 app.post('/admin/deny-note/:id', adminController.denyNote);
