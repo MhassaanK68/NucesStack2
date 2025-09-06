@@ -1,3 +1,8 @@
+import { apiClient } from './apiClient.js';
+
+// Make toast function globally available for API client
+window.showToast = toast;
+
 let state = {
     semesters: [],
     subjects: [],
@@ -7,6 +12,7 @@ let state = {
 // --- DOM refs ---
 const semesterSelect = document.getElementById("semesterSelect");
 const noteSubject = document.getElementById("noteSubject");
+const uploadForm = document.getElementById("upload-your-notes-form");
 
 // --- Render helpers ---
 function fillSemesterSelect() {
@@ -78,51 +84,46 @@ loadInitialData();
 // --- API functions for notes ---
 async function fetchSemesters() {
     try {
-        const response = await fetch("/api/semesters");
-        return await response.json();
+        state.semesters = await apiClient.get("/api/semesters");
+        fillSemesterSelect();
     } catch (error) {
         console.error("Error fetching semesters:", error);
-        return [];
+        toast("Failed to load semesters. Please try again.", "error");
     }
 }
 
 async function fetchSubjects(semesterId = null) {
+    if (!semesterId) return [];
     try {
-        const url = semesterId
-            ? `/api/subjects?semester_id=${semesterId}`
-            : "/api/subjects";
-        const response = await fetch(url);
-        return await response.json();
+        state.subjects = await apiClient.get(`/api/subjects?semester=${semesterId}`);
+        fillSubjectSelect(noteSubject);
+        return state.subjects;
     } catch (error) {
         console.error("Error fetching subjects:", error);
+        toast("Failed to load subjects. Please try again.", "error");
         return [];
     }
 }
 
 async function fetchNotesForSubject(subjectId) {
+    if (!subjectId) return [];
     try {
-        const response = await fetch(`/api/subjects/${subjectId}/notes`);
-        return await response.json();
+        return await apiClient.get(`/api/notes?subject=${subjectId}`);
     } catch (error) {
         console.error("Error fetching notes:", error);
+        toast("Failed to load notes. Please try again.", "error");
         return [];
     }
 }
 
-async function addNote(title, subjectId, description, pdfId, videoId) {
+async function addNote(title, subjectId, description, pdfId) {
     try {
-        const response = await fetch("/api/notes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                title,
-                subject_id: subjectId,
-                description,
-                pdf_id: pdfId,
-                video_id: videoId,
-            }),
+        return await apiClient.post("/api/notes", {
+            title,
+            subjectId,
+            description,
+            pdfId
         });
-        return await response.json();
     } catch (error) {
         console.error("Error adding note:", error);
         throw error;
@@ -131,10 +132,8 @@ async function addNote(title, subjectId, description, pdfId, videoId) {
 
 async function deleteNote(id) {
     try {
-        const response = await fetch(`/api/notes/${id}`, {
-            method: "DELETE",
-        });
-        return await response.json();
+        await apiClient.delete(`/api/notes/${id}`);
+        return true;
     } catch (error) {
         console.error("Error deleting note:", error);
         throw error;
@@ -257,9 +256,57 @@ async function fillNotesForSubject(subjectId, el) {
     });
 }
 
-document.getElementById("upload-your-notes-form").addEventListener("submit", function(e) {
-    toast("Uploading... Please wait.");
-});
+// Handle form submission
+if (uploadForm) {
+    uploadForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById("noteTitle").value.trim();
+        const subjectId = document.getElementById("noteSubject").value;
+        const description = document.getElementById("noteDescription").value.trim();
+        const fileInput = document.getElementById("dropzone-file");
+        
+        // Basic validation
+        if (!title || !subjectId || !fileInput.files[0]) {
+            toast("Please fill in all required fields and select a file", "error");
+            return;
+        }
+        
+        const submitButton = document.getElementById("addNoteBtn");
+        
+        try {
+            // Show loading state
+            setButtonLoading("addNoteBtn", true);
+            
+            // Upload file and create note using the uploadFile method
+            const response = await apiClient.uploadFile(
+              "/contribute/upload-your-notes",
+              fileInput.files[0],
+              {
+                title,
+                subject: subjectId,
+                ...(description && { description })
+              }
+            );
+            
+            // Show success message
+            toast("Note uploaded successfully! It will be reviewed by an admin.", "success");
+            
+            // Reset form
+            uploadForm.reset();
+            document.getElementById("upload-content").classList.remove("hidden");
+            document.getElementById("file-selected").classList.add("hidden");
+            
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            const errorMessage = error.message || "Failed to upload note. Please try again.";
+            toast(errorMessage, "error");
+        } finally {
+            // Reset loading state
+            setButtonLoading("addNoteBtn", false);
+        }
+    });
+}
 
 
 

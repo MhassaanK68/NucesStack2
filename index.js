@@ -39,45 +39,11 @@ app.use(session({
   }
 }));
 
-// JWT Authentication Middleware
-const authMiddleware = (req, res, next) => {
-  // Get token from Authorization header
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ 
-      error: 'Access denied. No token provided.',
-      message: 'Authorization header with Bearer token is required'
-    });
-  }
+// Import JWT utilities
+const { authMiddleware, generateToken } = require('./utils/jwtUtils');
 
-  // Extract token from "Bearer <token>"
-  const token = authHeader.substring(7);
-
-  try {
-    // Verify token using JWT_SECRET from environment variables
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Add decoded token data to request object
-    next(); // Continue to next middleware/route handler
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(403).json({ 
-        error: 'Token expired',
-        message: 'Please request a new token'
-      });
-    } else if (error.name === 'JsonWebTokenError') {
-      return res.status(403).json({ 
-        error: 'Invalid token',
-        message: 'Token is malformed or invalid'
-      });
-    } else {
-      return res.status(403).json({ 
-        error: 'Token verification failed',
-        message: 'Unable to verify token'
-      });
-    }
-  }
-};
+// Apply JWT auth middleware to all API routes
+app.use(authMiddleware);
 
 // Error Logging Middleware
 app.use((err, req, res, next) => {
@@ -90,27 +56,14 @@ sequelize.authenticate()
   .then(() => console.log('✅ Connected to MySQL'))
   .catch(err => console.error('❌ DB connection error:', err));
 
-// JWT Token Generation Route
-app.get('/get-token', (req, res) => {
+// JWT Token Generation Endpoint (both /api/get-token and /get-token for backward compatibility)
+const handleGetToken = async (req, res) => {
   try {
-    // Check if JWT_SECRET is configured
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ 
-        error: 'Server configuration error',
-        message: 'JWT_SECRET not configured'
-      });
-    }
-
-    // Generate JWT token with empty payload and 5-minute expiration
-    const token = jwt.sign(
-      {}, // Empty payload as requested
-      process.env.JWT_SECRET, // Secret from environment variables
-      { expiresIn: '5m' } // Token expires in 5 minutes
-    );
-
+    const token = generateToken();
     console.log('New JWT token generated for IP:', req.ip);
     
     res.json({ 
+      success: true,
       token: token,
       expiresIn: '5m',
       message: 'Token generated successfully'
@@ -118,11 +71,16 @@ app.get('/get-token', (req, res) => {
   } catch (error) {
     console.error('Token generation error:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Token generation failed',
-      message: 'Unable to generate authentication token'
+      message: error.message
     });
   }
-});
+};
+
+// Register both routes for backward compatibility
+app.get('/api/get-token', handleGetToken);
+app.get('/get-token', handleGetToken);
 
 app.get('/', async (req, res) => {
 
@@ -353,6 +311,7 @@ app.get('/api/pending-notes', authMiddleware, adminController.getPendingNotes); 
 app.post('/admin/approve-note/:id', adminController.approveNote);
 app.post('/admin/deny-note/:id', adminController.denyNote);
 
+// Use the uploadNotes controller which now includes JWT authentication
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
 

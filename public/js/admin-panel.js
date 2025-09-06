@@ -57,17 +57,35 @@ let authToken = null;
 // Fetch a new JWT token from the server
 async function fetchAuthToken() {
   try {
-    const response = await fetch('/get-token');
-    if (!response.ok) {
-      throw new Error(`Failed to get token: ${response.status}`);
+    // Try both endpoints for backward compatibility
+    const endpoints = ['/api/get-token', '/get-token'];
+    let lastError;
+    
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.token) {
+            authToken = data.token;
+            console.log('New authentication token obtained from', endpoint);
+            return authToken;
+          }
+        }
+      } catch (err) {
+        lastError = err;
+        console.warn(`Failed to fetch token from ${endpoint}:`, err);
+      }
     }
-    const data = await response.json();
-    authToken = data.token;
-    console.log('New authentication token obtained');
-    return authToken;
+    
+    throw lastError || new Error('No valid token endpoint found');
   } catch (error) {
     console.error('Error fetching auth token:', error);
-    toast('Failed to get authentication token', 'error');
+    const errorMessage = error.message.includes('404') 
+      ? 'Authentication service unavailable. Please try again later.'
+      : 'Failed to get authentication token';
+      
+    toast(errorMessage, 'error');
     throw error;
   }
 }
@@ -1214,19 +1232,39 @@ function renderPendingNotes(notes) {
 // Initialize authentication and load data
 async function initializeApp() {
   try {
-    // Fetch authentication token first
-    await fetchAuthToken();
-    console.log('Authentication token obtained, loading initial data...');
+    // Show loading state
+    document.body.classList.add('loading');
     
-    // Load initial data after authentication
-    await loadInitialData();
+    // Get initial auth token
+    try {
+      await fetchAuthToken();
+    } catch (error) {
+      // If we can't get a token, we'll still try to load data
+      // as some endpoints might be publicly accessible
+      console.warn('Proceeding without authentication - some features may be limited');
+    }
     
-    // Load pending notes for approval tab
-    const pendingNotes = await fetchPendingNotes();
-    renderPendingNotes(pendingNotes);
+    // Load initial data
+    try {
+      await loadInitialData();
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      toast('Some data could not be loaded. Please try refreshing the page.', 'error');
+    }
+    
+    // Set up periodic token refresh (every 4 minutes)
+    setInterval(() => {
+      fetchAuthToken().catch(err => {
+        console.warn('Token refresh failed:', err);
+      });
+    }, 4 * 60 * 1000);
+    
   } catch (error) {
     console.error('Failed to initialize app:', error);
-    toast('Failed to initialize application', 'error');
+    toast('Failed to initialize application. Please refresh the page.', 'error');
+  } finally {
+    // Remove loading state
+    document.body.classList.remove('loading');
   }
 }
 
