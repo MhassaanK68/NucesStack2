@@ -183,7 +183,11 @@ class ApiClient {
 }
 
 // Create a singleton instance
-export const apiClient = new ApiClient();
+const apiClient = new ApiClient();
+
+// Make it globally available
+window.ApiClient = ApiClient;
+window.apiClient = apiClient;
 
 // Initialize the API client when the page loads
 document.addEventListener('DOMContentLoaded', () => {

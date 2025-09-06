@@ -43,26 +43,22 @@ const adminController = {
     }
   },
 
-  // Get subjects (optionally filtered by semester)
+  // Get subjects (filtered by semester_id if provided)
   getSubjects: async (req, res) => {
     try {
-      const { semester_id } = req.query;
+      // Support both 'semester' and 'semester_id' parameters
+      const semesterId = req.query.semester || req.query.semester_id;
       
-      const whereClause = semester_id ? { semester_id } : {};
-      
+      if (!semesterId) {
+        return res.status(400).json({ error: 'Semester ID is required' });
+      }
+
       const subjects = await models.subjects.findAll({
-        where: whereClause,
-        attributes: [
-          'id', 'name', 'slug', 'semester_id', 'description',
-          [sequelize.fn('COUNT', sequelize.col('notes.id')), 'notesCount']
-        ],
-        include: [{
-          model: models.notes,
-          as: 'notes',
-          attributes: []
-        }],
-        group: ['subjects.id'],
-        order: [['id', 'ASC']]
+        where: {
+          semester_id: semesterId
+        },
+        attributes: ['id', 'name', 'slug', 'semester_id'],
+        order: [['name', 'ASC']]
       });
       
       res.json(subjects);

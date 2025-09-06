@@ -1,5 +1,4 @@
-import { apiClient } from './apiClient.js';
-
+// API client will be available globally through window.apiClient
 // Make toast function globally available for API client
 window.showToast = toast;
 
@@ -13,6 +12,12 @@ let state = {
 const semesterSelect = document.getElementById("semesterSelect");
 const noteSubject = document.getElementById("noteSubject");
 const uploadForm = document.getElementById("upload-your-notes-form");
+const noteTitle = document.getElementById("noteTitle");
+const noteDescription = document.getElementById("noteDescription");
+const fileInput = document.getElementById("dropzone-file");
+const uploadContent = document.getElementById("upload-content");
+const fileSelected = document.getElementById("file-selected");
+const fileNameSpan = document.getElementById("file-name");
 
 // --- Render helpers ---
 function fillSemesterSelect() {
@@ -62,40 +67,90 @@ async function loadInitialData() {
 }
 
 async function loadSubjectsForSemester() {
-    if (!state.selectedSemester) return;
-    state.subjects = await fetchSubjects(state.selectedSemester);
-    fillSubjectSelect(noteSubject);
+    if (!state.selectedSemester) {
+        noteSubject.innerHTML = '<option value="">Select semester first</option>';
+        return;
+    }
+    
+    try {
+        const subjects = await fetchSubjects(state.selectedSemester);
+        if (subjects && subjects.length > 0) {
+            state.subjects = subjects;
+            fillSubjectSelect(noteSubject);
+        } else {
+            noteSubject.innerHTML = '<option value="">No subjects found</option>';
+        }
+    } catch (error) {
+        console.error('Error in loadSubjectsForSemester:', error);
+        noteSubject.innerHTML = '<option value="">Error loading subjects</option>';
+        throw error;
+    }
 }
 
 // --- Event handlers ---
-semesterSelect.addEventListener("change", async () => {
-    state.selectedSemester = semesterSelect.value;
-    if (state.selectedSemester) {
-        await loadSubjectsForSemester();
+async function handleSemesterChange() {
+    const semesterId = semesterSelect.value;
+    state.selectedSemester = semesterId;
+    
+    // Clear subjects when semester changes
+    state.subjects = [];
+    noteSubject.innerHTML = '<option value="">Loading subjects...</option>';
+    
+    if (semesterId) {
+        try {
+            await loadSubjectsForSemester();
+        } catch (error) {
+            console.error('Error loading subjects:', error);
+            noteSubject.innerHTML = '<option value="">Error loading subjects</option>';
+        }
     } else {
-        state.subjects = [];
         fillSubjectSelect(noteSubject);
     }
-});
+}
+
+// Add event listener for semester change
+semesterSelect.addEventListener("change", handleSemesterChange);
 
 // --- Initialize ---
-loadInitialData();
+// Wait for the API client to be available
+function initializeApp() {
+    if (window.apiClient) {
+        // Initialize with empty semester select
+        fillSemesterSelect();
+        
+        // Load semesters
+        loadInitialData().catch(error => {
+            console.error('Error in loadInitialData:', error);
+            toast('Failed to load initial data. Please refresh the page.', 'error');
+        });
+    } else {
+        // Try again after a short delay if apiClient isn't loaded yet
+        setTimeout(initializeApp, 100);
+    }
+}
+
+// Start the app
+initializeApp();
 
 // --- API functions for notes ---
 async function fetchSemesters() {
     try {
-        state.semesters = await apiClient.get("/api/semesters");
+        // Use the global apiClient instance
+        state.semesters = await window.apiClient.get("/api/semesters");
         fillSemesterSelect();
+        return state.semesters;
     } catch (error) {
         console.error("Error fetching semesters:", error);
         toast("Failed to load semesters. Please try again.", "error");
+        return [];
     }
 }
 
 async function fetchSubjects(semesterId = null) {
     if (!semesterId) return [];
     try {
-        state.subjects = await apiClient.get(`/api/subjects?semester=${semesterId}`);
+        // Use the global apiClient instance
+        state.subjects = await window.apiClient.get(`/api/subjects?semester=${semesterId}`);
         fillSubjectSelect(noteSubject);
         return state.subjects;
     } catch (error) {
@@ -194,40 +249,20 @@ function setButtonLoading(buttonId, isLoading) {
     }
 }
 
-// --- DOM refs ---
-const noteTitle = document.getElementById("noteTitle");
-const noteDescription = document.getElementById("noteDescription");
-const notePdfId = document.getElementById("notePdfId");
-const noteVideoId = document.getElementById("noteVideoId");
-const addNoteBtn = document.getElementById("addNoteBtn");
-
-const removeNoteBtn = document.getElementById("removeNoteBtn");
-
-// --- Event handlers ---
-addNoteBtn.addEventListener("click", async () => {
-    const sid = noteSubject.value;
-    const title = noteTitle.value.trim();
-    const description = noteDescription.value.trim();
-    const pdfId = notePdfId.value.trim();
-    const videoId = noteVideoId.value.trim();
-
-    if (!sid) return toast("Select a subject");
-    if (!title) return toast("Enter a note title");
-
-    setButtonLoading("addNoteBtn", true);
-    try {
-        await addNote(title, sid, description, pdfId, videoId);
-        noteTitle.value = "";
-        noteDescription.value = "";
-        notePdfId.value = "";
-        noteVideoId.value = "";
-        toast("Note added");
-    } catch (error) {
-        toast("Failed to add note");
-    } finally {
-        setButtonLoading("addNoteBtn", false);
-    }
-});
+// Initialize file upload UI
+if (fileInput && fileNameSpan && uploadContent && fileSelected) {
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+            const fileName = fileInput.files[0].name;
+            fileNameSpan.textContent = fileName;
+            uploadContent.classList.add("hidden");
+            fileSelected.classList.remove("hidden");
+        } else {
+            uploadContent.classList.remove("hidden");
+            fileSelected.classList.add("hidden");
+        }
+    });
+}
 
 const lockedBtns = document.querySelectorAll(".locked-for-contributors");
 lockedBtns.forEach(btn => {
@@ -261,52 +296,57 @@ if (uploadForm) {
     uploadForm.addEventListener("submit", async function(e) {
         e.preventDefault();
         
-        const title = document.getElementById("noteTitle").value.trim();
-        const subjectId = document.getElementById("noteSubject").value;
-        const description = document.getElementById("noteDescription").value.trim();
-        const fileInput = document.getElementById("dropzone-file");
+        const title = noteTitle?.value?.trim() || '';
+        const subjectId = noteSubject?.value;
+        const semesterId = semesterSelect?.value;
+        const description = noteDescription?.value?.trim() || '';
         
         // Basic validation
-        if (!title || !subjectId || !fileInput.files[0]) {
+        if (!title || !subjectId || !semesterId || !fileInput?.files?.[0]) {
             toast("Please fill in all required fields and select a file", "error");
             return;
         }
         
-        const submitButton = document.getElementById("addNoteBtn");
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('semester', semesterId);
+        formData.append('subject', subjectId);
+        formData.append('description', description);
+        formData.append('file', fileInput.files[0]);
         
         try {
             // Show loading state
             setButtonLoading("addNoteBtn", true);
             
-            // Upload file and create note using the uploadFile method
-            const response = await apiClient.uploadFile(
-              "/contribute/upload-your-notes",
-              fileInput.files[0],
-              {
-                title,
-                subject: subjectId,
-                ...(description && { description })
-              }
-            );
+            // Make the API request
+            const response = await fetch('/contribute/upload-your-notes', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${window.apiClient?.token || ''}`
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to upload note');
+            }
             
             // Show success message
             toast("Note uploaded successfully! It will be reviewed by an admin.", "success");
             
             // Reset form
             uploadForm.reset();
-            document.getElementById("upload-content").classList.remove("hidden");
-            document.getElementById("file-selected").classList.add("hidden");
+            if (uploadContent) uploadContent.classList.remove("hidden");
+            if (fileSelected) fileSelected.classList.add("hidden");
             
         } catch (error) {
             console.error("Error submitting form:", error);
-            const errorMessage = error.message || "Failed to upload note. Please try again.";
-            toast(errorMessage, "error");
+            toast(error.message || "Failed to upload note. Please try again.", "error");
         } finally {
             // Reset loading state
             setButtonLoading("addNoteBtn", false);
         }
     });
 }
-
-
-

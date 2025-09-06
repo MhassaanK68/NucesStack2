@@ -431,7 +431,16 @@
         </script>
 
         <!-- Add API Client -->
-        <script type="module" src="/js/apiClient.js"></script>
-        <script src="/js/contributer-panel.js"></script>
+        <script>
+            // Load API client first
+            import('/js/apiClient.js').then(() => {
+                // Make apiClient globally available
+                window.apiClient = new ApiClient();
+                // Now load the contributor panel
+                const script = document.createElement('script');
+                script.src = '/js/contributer-panel.js';
+                document.body.appendChild(script);
+            });
+        </script>
 
         <%- include('partials/footer') %>

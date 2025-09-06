@@ -46,52 +46,81 @@ const authenticateJWT = (req, res, next) => {
 exports.uploadNotes = [
   authenticateJWT,
   async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        error: 'No file uploaded',
-        message: 'Please upload a PDF file'
-      });
-    }
-
     try {
       const { title, semester: semester_id, subject: subject_id } = req.body;
+      const file = req.file;
       
+      // Validate required fields
       if (!title || !semester_id || !subject_id) {
-        throw new Error('Title, semester and subject are required');
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields',
+          message: 'Title, semester, and subject are required'
+        });
       }
 
-      const WebhookURL = "https://script.google.com/macros/s/AKfycbwZtBvFxOh5dGFP9FKg1j9sbJYZ3c9mkxCsZk5bLDq3v3EtxQTHEEgD2QQZUfoMRUQ/exec";
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          error: 'No file uploaded',
+          message: 'Please upload a PDF file'
+        });
+      }
+
+      // Convert file to base64
+      const fileBuffer = await fs.promises.readFile(file.path);
+      const base64String = fileBuffer.toString('base64');
+
+      // Google Drive upload configuration
+      const webhookURL = "https://script.google.com/macros/s/AKfycbwZtBvFxOh5dGFP9FKg1j9sbJYZ3c9mkxCsZk5bLDq3v3EtxQTHEEgD2QQZUfoMRUQ/exec";
       const apiKey = process.env.GOOGLE_API_KEY;
 
-      // Read PDF file and convert to base64
-      const fileBuffer = await fs.readFile(req.file.path);
-      const base64String = fileBuffer.toString("base64");
-
-      // Send to Google Apps Script
-      const response = await fetch(WebhookURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      console.log('Starting Google Drive upload...');
+      console.log('File size:', file.size, 'bytes');
+      
+      // Upload to Google Drive via webhook
+      const response = await fetch(webhookURL, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         body: new URLSearchParams({
           key: apiKey,
           file: base64String,
-          filename: req.file.originalname,
-          mimeType: req.file.mimetype,
-        }),
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          title: title,
+          semester_id: semester_id,
+          subject_id: subject_id,
+          uploader: req.user?.username || 'anonymous'
+        })
       });
 
+      const responseData = await response.text();
+      console.log('Google Drive response status:', response.status);
+      console.log('Google Drive response:', responseData);
+
       if (!response.ok) {
-        throw new Error(`Apps Script returned ${response.status}`);
+        let errorMessage = `Google Drive upload failed with status ${response.status}`;
+        try {
+          const errorData = JSON.parse(responseData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          errorMessage = responseData || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
-      if (result.success !== true) {
-        throw new Error(`Apps Script error: ${result.message}`);
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to upload to Google Drive');
       }
 
       // Save to database
-      await models.notes.create({
+      const note = await models.notes.create({
         title,
+        description: req.body.description || '',
         pdf_id: result.fileId,
         semester_id,
         subject_id,
@@ -101,22 +130,31 @@ exports.uploadNotes = [
         updated_at: new Date()
       });
 
-      // Cleanup local temp file
-      await fs.unlink(req.file.path);
+      // Clean up uploaded file
+      try {
+        await fs.promises.unlink(file.path);
+      } catch (cleanupError) {
+        console.error('Error cleaning up temp file:', cleanupError);
+      }
 
       res.json({
         success: true,
-        message: 'Note uploaded successfully. It will be reviewed by an admin.'
+        message: 'Note uploaded successfully. It will be reviewed by an admin.',
+        data: {
+          id: note.id,
+          title: note.title,
+          fileId: result.fileId
+        }
       });
     } catch (err) {
       console.error('Error uploading note:', err);
       
-      // Cleanup temp file if it exists
+      // Clean up temp file if it exists
       if (req.file?.path) {
         try {
-          await fs.unlink(req.file.path);
-        } catch (cleanupErr) {
-          console.error('Error cleaning up temp file:', cleanupErr);
+          await fs.promises.unlink(req.file.path);
+        } catch (cleanupError) {
+          console.error('Error cleaning up temp file after error:', cleanupError);
         }
       }
       
