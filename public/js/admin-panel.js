@@ -970,22 +970,28 @@ async function updateStatsCounters() {
   const activeSemesterEl = document.getElementById('activeSemester');
 
   try {
-    // Update active semester
-    if (activeSemesterEl && state.selectedSemester) {
-      const semesters = await fetchSemesters();
-      const activeSemester = semesters.find(s => s.id == state.selectedSemester);
-      if (activeSemester) {
-        activeSemesterEl.textContent = activeSemester.name;
+    // Update active semester display
+    if (activeSemesterEl) {
+      if (state.selectedSemester) {
+        const semesters = await fetchSemesters();
+        const activeSemester = semesters.find(s => s.id == state.selectedSemester);
+        activeSemesterEl.textContent = activeSemester ? activeSemester.name : 'N/A';
+      } else {
+        activeSemesterEl.textContent = 'Select a semester';
       }
     }
     
-    // Update total subjects
+    // Update total subjects for the selected semester
     if (totalSubjectsEl) {
-      const subjects = await fetchSubjects(state.selectedSemester || null);
-      totalSubjectsEl.textContent = subjects.length;
+      if (state.selectedSemester) {
+        const subjects = await fetchSubjects(state.selectedSemester);
+        totalSubjectsEl.textContent = subjects.length;
+      } else {
+        totalSubjectsEl.textContent = '-';
+      }
     }
     
-    // Update total notes
+    // Update total notes for the selected semester
     if (totalNotesEl) {
       if (state.selectedSemester) {
         try {
@@ -996,21 +1002,14 @@ async function updateStatsCounters() {
           totalNotesEl.textContent = '0';
         }
       } else {
-        totalNotesEl.textContent = '0';
+        totalNotesEl.textContent = '-';
       }
     }
   } catch (error) {
     console.error('Error in updateStatsCounters:', error);
-    if (totalSubjectsEl) totalSubjectsEl.textContent = '0';
-    if (totalNotesEl) totalNotesEl.textContent = '0';
-    if (activeSemesterEl) activeSemesterEl.textContent = 'N/A';
-  }
-  
-  if (activeSemesterEl && state.selectedSemester) {
-    const selectedSemester = state.semesters.find(s => s.id == state.selectedSemester);
-    activeSemesterEl.textContent = selectedSemester ? selectedSemester.name : '-';
-  } else if (activeSemesterEl) {
-    activeSemesterEl.textContent = '-';
+    if (totalSubjectsEl) totalSubjectsEl.textContent = '-';
+    if (totalNotesEl) totalNotesEl.textContent = '-';
+    if (activeSemesterEl) activeSemesterEl.textContent = 'Error';
   }
 }
 

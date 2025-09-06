@@ -330,16 +330,18 @@ if (uploadForm) {
             const result = await response.json();
             
             if (!response.ok) {
-                throw new Error(result.message || 'Failed to upload note');
+                throw new Error(result.error || 'Failed to upload note');
             }
             
             // Show success message
-            toast("Note uploaded successfully! It will be reviewed by an admin.", "success");
+            toast(result.message || "Note uploaded successfully!", "success");
             
             // Reset form
             uploadForm.reset();
             if (uploadContent) uploadContent.classList.remove("hidden");
             if (fileSelected) fileSelected.classList.add("hidden");
+            
+            // Stay on the same page after successful upload
             
         } catch (error) {
             console.error("Error submitting form:", error);

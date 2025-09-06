@@ -7,162 +7,136 @@ const sequelize = require('../config/db');
 const initModels = require("../models/init-models");
 const models = initModels(sequelize);
 
-const { verifyToken } = require('../utils/jwtUtils');
 
-/**
- * Middleware to verify JWT token
- */
-const authenticateJWT = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ 
-      success: false,
-      error: 'Unauthorized',
-      message: 'No token provided. Use Authorization: Bearer <token>'
-    });
+exports.uploadNotes = async (req, res) => {
+  // Ensure we have a valid session
+  if (!req.session?.user) {
+    return res.redirect("/login");
+  }
+  // Ensure we have a file and required fields
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const token = authHeader.substring(7);
+  const { title, semester: semester_id, subject: subject_id } = req.body;
   
+  // Validate required fields
+  if (!title || !semester_id || !subject_id) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  // Extract file info
+  const { path, originalname, mimetype } = req.file;
+  
+  // Initialize response sent flag
+  let responseSent = false;
+  
+  // Function to send response if not already sent
+  const sendResponse = (status, data) => {
+    if (!responseSent) {
+      responseSent = true;
+      if (status === 'success') {
+        return res.status(200).json({ 
+          success: true, 
+          message: 'Note uploaded successfully! It will be reviewed by an admin.' 
+        });
+      } else {
+        return res.status(status).json({ 
+          success: false, 
+          error: data 
+        });
+      }
+    }
+  };
+
   try {
-    // Verify token
-    req.user = verifyToken(token);
-    next();
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    const status = error.name === 'TokenExpiredError' ? 401 : 403;
-    res.status(status).json({
-      success: false,
-      error: 'Authentication failed',
-      message: error.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token'
-    });
-  }
-};
+    const file = req.file;
+    const title = req.body.title;
+    const semester_id = req.body.semester;
+    const subject_id = req.body.subject;
 
-/**
- * Upload notes with JWT authentication
- */
-exports.uploadNotes = [
-  authenticateJWT,
-  async (req, res) => {
+    const scriptId = "AKfycbwZtBvFxOh5dGFP9FKg1j9sbJYZ3c9mkxCsZk5bLDq3v3EtxQTHEEgD2QQZUfoMRUQ";
+    const webhookURL = `https://script.google.com/macros/s/${scriptId}/exec`;
+    const apiKey = process.env.GOOGLE_API_KEY;
+
+    if (!apiKey) {
+      return sendResponse(500, 'Google API key is not configured');
+    }
+
     try {
-      const { title, semester: semester_id, subject: subject_id } = req.body;
-      const file = req.file;
+      // Read PDF file and convert to base64
+      const fileBuffer = fs.readFileSync(path);
+      const base64String = fileBuffer.toString("base64");
+
+      // Prepare request data
+      const formData = new URLSearchParams();
+      formData.append('key', apiKey);
+      formData.append('file', base64String);
+      formData.append('filename', originalname);
+      formData.append('mimeType', mimetype);
+      formData.append('title', title);
+      formData.append('semester_id', semester_id);
+      formData.append('subject_id', subject_id);
+      formData.append('uploader', req.session.user.username || 'anonymous');
+
+      console.log('Sending request to Google Apps Script...');
       
-      // Validate required fields
-      if (!title || !semester_id || !subject_id) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing required fields',
-          message: 'Title, semester, and subject are required'
-        });
-      }
-
-      if (!file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded',
-          message: 'Please upload a PDF file'
-        });
-      }
-
-      // Convert file to base64
-      const fileBuffer = await fs.promises.readFile(file.path);
-      const base64String = fileBuffer.toString('base64');
-
-      // Google Drive upload configuration
-      const webhookURL = "https://script.google.com/macros/s/AKfycbwZtBvFxOh5dGFP9FKg1j9sbJYZ3c9mkxCsZk5bLDq3v3EtxQTHEEgD2QQZUfoMRUQ/exec";
-      const apiKey = process.env.GOOGLE_API_KEY;
-
-      console.log('Starting Google Drive upload...');
-      console.log('File size:', file.size, 'bytes');
-      
-      // Upload to Google Drive via webhook
+      // Send to Google Apps Script
       const response = await fetch(webhookURL, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${apiKey}`
         },
-        body: new URLSearchParams({
-          key: apiKey,
-          file: base64String,
-          filename: file.originalname,
-          mimeType: file.mimetype,
-          title: title,
-          semester_id: semester_id,
-          subject_id: subject_id,
-          uploader: req.user?.username || 'anonymous'
-        })
+        body: formData,
+        redirect: 'follow'
       });
 
-      const responseData = await response.text();
-      console.log('Google Drive response status:', response.status);
-      console.log('Google Drive response:', responseData);
-
       if (!response.ok) {
-        let errorMessage = `Google Drive upload failed with status ${response.status}`;
-        try {
-          const errorData = JSON.parse(responseData);
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          errorMessage = responseData || errorMessage;
-        }
-        throw new Error(errorMessage);
+        const errorText = await response.text();
+        console.error('Google Apps Script error response:', errorText);
+        return sendResponse(500, `Google Apps Script error: ${errorText}`);
       }
 
       const result = await response.json();
-
+      console.log('Google Apps Script response:', JSON.stringify(result, null, 2));
+      
       if (!result.success) {
-        throw new Error(result.message || 'Failed to upload to Google Drive');
+        return sendResponse(500, `Google Apps Script error: ${result.message || 'Unknown error'}`);
       }
 
-      // Save to database
-      const note = await models.notes.create({
-        title,
+      if (!result.fileId) {
+        return sendResponse(500, 'Google Drive upload failed: No fileId in response');
+      }
+
+      // Save to database with approved: false
+      await models.notes.create({
+        title: title,
         description: req.body.description || '',
         pdf_id: result.fileId,
-        semester_id,
-        subject_id,
+        web_view_link: result.webViewLink,
+        web_content_link: result.webContentLink,
+        semester_id: semester_id,
+        subject_id: subject_id,
         approved: false,
-        uploader: req.user?.username || 'anonymous',
+        uploader: req.session.user.username,
         created_at: new Date(),
         updated_at: new Date()
       });
 
-      // Clean up uploaded file
-      try {
-        await fs.promises.unlink(file.path);
-      } catch (cleanupError) {
-        console.error('Error cleaning up temp file:', cleanupError);
-      }
+      // Cleanup local temp file
+      fs.unlink(path, (err) => {
+        if (err) console.error("Error deleting file:", err);
+      });
 
-      res.json({
-        success: true,
-        message: 'Note uploaded successfully. It will be reviewed by an admin.',
-        data: {
-          id: note.id,
-          title: note.title,
-          fileId: result.fileId
-        }
-      });
+      return sendResponse('success');
+      
     } catch (err) {
-      console.error('Error uploading note:', err);
-      
-      // Clean up temp file if it exists
-      if (req.file?.path) {
-        try {
-          await fs.promises.unlink(req.file.path);
-        } catch (cleanupError) {
-          console.error('Error cleaning up temp file after error:', cleanupError);
-        }
-      }
-      
-      res.status(500).json({
-        success: false,
-        error: 'Upload failed',
-        message: err.message || 'An error occurred while uploading the note'
-      });
+      console.error('Error in upload process:', err);
+      return sendResponse(500, err.message || 'An error occurred during file upload');
     }
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return sendResponse(500, 'An unexpected error occurred');
   }
-];
+};

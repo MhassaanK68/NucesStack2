@@ -43,20 +43,20 @@ const adminController = {
     }
   },
 
-  // Get subjects (filtered by semester_id if provided)
+  // Get subjects for a specific semester
   getSubjects: async (req, res) => {
     try {
-      // Support both 'semester' and 'semester_id' parameters
-      const semesterId = req.query.semester || req.query.semester_id;
+      const semester_id = req.query.semester_id || req.query.semester; // Support both parameter names
       
-      if (!semesterId) {
-        return res.status(400).json({ error: 'Semester ID is required' });
+      if (!semester_id) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'semester_id parameter is required' 
+        });
       }
-
+      
       const subjects = await models.subjects.findAll({
-        where: {
-          semester_id: semesterId
-        },
+        where: { semester_id },
         attributes: ['id', 'name', 'slug', 'semester_id'],
         order: [['name', 'ASC']]
       });
@@ -64,7 +64,10 @@ const adminController = {
       res.json(subjects);
     } catch (error) {
       console.error('Error fetching subjects:', error);
-      res.status(500).json({ error: 'Failed to fetch subjects' });
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to fetch subjects' 
+      });
     }
   },
 
