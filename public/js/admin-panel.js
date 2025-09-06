@@ -408,24 +408,40 @@ async function renderSubjectsList() {
     return;
   }
 
+  if (state.subjects.length === 0) {
+    subjectList.innerHTML =
+      '<li class="text-center text-slate-500 py-4">No subjects found for this semester</li>';
+    return;
+  }
+
   state.subjects.forEach((sub) => {
     const notesCount = sub.notesCount || 0;
     const li = document.createElement("li");
     li.className =
-      "flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200";
+      "flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors";
     li.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="h-8 w-8 rounded-lg bg-sky-100 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <div class="flex items-center gap-3 flex-1">
+            <div class="h-10 w-10 rounded-lg bg-sky-100 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
               </svg>
             </div>
-            <div>
-              <div class="font-medium text-slate-800">${sub.name}</div>
-              <div class="text-xs text-slate-500">${notesCount} notes</div>
+            <div class="min-w-0">
+              <div class="font-medium text-slate-800 truncate">${sub.name}</div>
+              <div class="text-xs text-slate-500 flex items-center gap-1">
+                <span class="inline-flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                  ${notesCount} ${notesCount === 1 ? 'note' : 'notes'}
+                </span>
+              </div>
             </div>
           </div>
-          <button data-id="${sub.id}" class="delete-sub px-3 py-1.5 rounded-lg bg-color-primary hover:bg-color-light-primary text-white text-sm">Remove</button>
+          <button data-id="${sub.id}" class="delete-sub px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-sm font-medium transition-colors">
+            Remove
+          </button>
         `;
     subjectList.appendChild(li);
   });
