@@ -26,7 +26,7 @@ class ApiClient {
     // Otherwise, fetch a new token
     this.isRefreshing = true;
     try {
-      const response = await fetch('/api/get-token');
+      const response = await fetch('/frontend-get-token');
       const data = await response.json();
       
       if (!response.ok) {

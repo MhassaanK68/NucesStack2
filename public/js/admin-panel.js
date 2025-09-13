@@ -54,31 +54,24 @@ function setButtonLoading(buttonId, isLoading) {
 // --- JWT Token Management ---
 let authToken = null;
 
-// Fetch a new JWT token from the server
+// Fetch a new JWT token from the server using the frontend proxy
 async function fetchAuthToken() {
   try {
-    // Try both endpoints for backward compatibility
-    const endpoints = ['/api/get-token', '/get-token'];
-    let lastError;
+    const response = await fetch('/frontend-get-token');
     
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.token) {
-            authToken = data.token;
-            console.log('New authentication token obtained from', endpoint);
-            return authToken;
-          }
-        }
-      } catch (err) {
-        lastError = err;
-        console.warn(`Failed to fetch token from ${endpoint}:`, err);
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to get authentication token');
     }
     
-    throw lastError || new Error('No valid token endpoint found');
+    const data = await response.json();
+    if (data.success && data.token) {
+      authToken = data.token;
+      console.log('New authentication token obtained');
+      return authToken;
+    }
+    
+    throw new Error('Invalid token response from server');
   } catch (error) {
     console.error('Error fetching auth token:', error);
     const errorMessage = error.message.includes('404') 
