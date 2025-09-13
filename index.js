@@ -56,9 +56,21 @@ sequelize.authenticate()
   .then(() => console.log('✅ Connected to MySQL'))
   .catch(err => console.error('❌ DB connection error:', err));
 
-// JWT Token Generation Endpoint (both /api/get-token and /get-token for backward compatibility)
+// JWT Token Generation Endpoint with API key protection
 const handleGetToken = async (req, res) => {
   try {
+    const apiKey = req.headers['x-api-key'];
+    
+    // Check if API key is provided and valid
+    if (!apiKey || apiKey !== process.env.API_KEY) {
+      console.warn('Invalid or missing API key from IP:', req.ip);
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden',
+        message: 'Invalid or missing API key'
+      });
+    }
+
     const token = generateToken();
     console.log('New JWT token generated for IP:', req.ip);
     
@@ -78,7 +90,29 @@ const handleGetToken = async (req, res) => {
   }
 };
 
-// Register both routes for backward compatibility
+// Frontend proxy endpoint for token generation
+app.get('/frontend-get-token', async (req, res) => {
+  try {
+    // Forward the request to the internal token endpoint with the API key
+    const response = await fetch(`${process.env.API_URL || 'http://localhost:3000'}/api/get-token`, {
+      headers: {
+        'x-api-key': process.env.API_KEY
+      }
+    });
+    
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Proxy token generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Token generation failed',
+      message: error.message
+    });
+  }
+});
+
+// Register token endpoints
 app.get('/api/get-token', handleGetToken);
 app.get('/get-token', handleGetToken);
 

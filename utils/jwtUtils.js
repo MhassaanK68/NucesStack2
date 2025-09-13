@@ -37,8 +37,10 @@ const verifyToken = (token) => {
  * @param {Function} next - Express next function
  */
 const authMiddleware = (req, res, next) => {
-  // Skip authentication for non-API routes and the token endpoint
-  if (!req.path.startsWith('/api/') || req.path === '/api/get-token') {
+  // Skip authentication for non-API routes, the token endpoint, and frontend proxy
+  if (!req.path.startsWith('/api/') || 
+      req.path === '/api/get-token' || 
+      req.path === '/frontend-get-token') {
     return next();
   }
 
