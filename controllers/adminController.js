@@ -43,7 +43,7 @@ const adminController = {
     }
   },
 
-  // Get subjects for a specific semester
+  // Get subjects for a specific semester with note counts
   getSubjects: async (req, res) => {
     try {
       const semester_id = req.query.semester_id || req.query.semester; // Support both parameter names
@@ -57,7 +57,13 @@ const adminController = {
       
       const subjects = await models.subjects.findAll({
         where: { semester_id },
-        attributes: ['id', 'name', 'slug', 'semester_id'],
+        attributes: [
+          'id', 
+          'name', 
+          'slug', 
+          'semester_id',
+          [sequelize.literal('(SELECT COUNT(*) FROM notes WHERE notes.subject_id = subjects.id)'), 'notesCount']
+        ],
         order: [['name', 'ASC']]
       });
       
