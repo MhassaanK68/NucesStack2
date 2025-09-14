@@ -5,6 +5,14 @@ const session = require('express-session');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+
+// JWT
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require("./utils/jwt");
+const authenticateToken = require("./middlewares/verify-jwt");
+
+// In-memory store for refresh tokens because abhi redis ke paisay nahi ha :(
+let refreshTokens = [];
 
 // Controllers
 const contributorsController = require('./controllers/contributorsController');
@@ -23,6 +31,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/views');
@@ -30,7 +39,7 @@ app.set("trust proxy", true);
 
 // Session Middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'nucesstack',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -122,6 +131,42 @@ app.get('/', async (req, res) => {
   res.render('main.ejs', {semesters});
   
 })
+
+// Sends the access and refresh tokens to the user only if logged in
+app.get("/api/token", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Login to krlo boss :)" });
+  }
+
+  const user = req.session.user;
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  refreshTokens.push(refreshToken);
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true, 
+    sameSite: "strict"
+  });
+
+  res.json({ accessToken });
+});
+
+// Generated a new access token if the refresh token is valid
+app.post("/api/refresh", (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken || !refreshTokens.includes(refreshToken)) {
+    return res.status(403).json({ error: "Invalid refresh token" });
+  }
+
+  const payload = verifyRefreshToken(refreshToken);
+  if (!payload) return res.sendStatus(403);
+
+  const newAccessToken = generateAccessToken(payload);
+  res.json({ accessToken: newAccessToken });
+});
+
+
 
 app.get('/admin', (req, res) => {
 
@@ -330,22 +375,18 @@ app.get('/view-notes', (req, res)=>{
 // Import admin controller
 
 
-// Protected Admin API routes - All /api/* routes require JWT authentication
-app.get('/api/semesters', authMiddleware, adminController.getSemesters);
-app.get('/api/subjects', authMiddleware, adminController.getSubjects);
-app.post('/api/subjects', authMiddleware, adminController.addSubject);
-app.delete('/api/subjects/:id', authMiddleware, adminController.deleteSubject);
-app.get('/api/subjects/:id/notes', authMiddleware, adminController.getNotesBySubject);
-app.get('/api/notes/:id', authMiddleware, adminController.getNoteById);
-app.put('/api/notes/:id', authMiddleware, adminController.updateNote);
-app.post('/api/notes', authMiddleware, adminController.addNote);
-app.delete('/api/notes/:id', authMiddleware, adminController.deleteNote);
-app.get('/api/notes-count', authMiddleware, adminController.getNotesCount);
-app.get('/api/pending-notes', authMiddleware, adminController.getPendingNotes); // returns JSON
-app.post('/admin/approve-note/:id', adminController.approveNote);
-app.post('/admin/deny-note/:id', adminController.denyNote);
-
-// Use the uploadNotes controller which now includes JWT authentication
+// Admin API routes
+app.get('/api/semesters', authenticateToken, adminController.getSemesters);
+app.get('/api/subjects', authenticateToken,adminController.getSubjects);
+app.post('/api/subjects', authenticateToken,adminController.addSubject);
+app.delete('/api/subjects/:id', authenticateToken,adminController.deleteSubject);
+app.get('/api/subjects/:id/notes', authenticateToken,adminController.getNotesBySubject);
+app.post('/api/notes', authenticateToken,adminController.addNote);
+app.delete('/api/notes/:id', authenticateToken,adminController.deleteNote);
+app.get('/api/notes/count', authenticateToken,adminController.getNotesCount);
+app.get('/api/pending-notes', authenticateToken,adminController.getPendingNotes); // returns JSON
+app.post('/admin/approve-note/:id', authenticateToken,adminController.approveNote);
+app.post('/admin/deny-note/:id', authenticateToken,adminController.denyNote);
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
 
