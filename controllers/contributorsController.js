@@ -7,6 +7,7 @@ const sequelize = require('../config/db');
 const initModels = require("../models/init-models");
 const models = initModels(sequelize);
 
+const pushNotificationToNtfy = require("../utils/notify").pushNotificationToNtfy;
 
 exports.uploadNotes = async (req, res) => {
   // Ensure we have a valid session
@@ -99,7 +100,6 @@ exports.uploadNotes = async (req, res) => {
       }
 
       const result = await response.json();
-      console.log('Google Apps Script response:', JSON.stringify(result, null, 2));
       
       if (!result.success) {
         return sendResponse(500, `Google Apps Script error: ${result.message || 'Unknown error'}`);
@@ -129,6 +129,8 @@ exports.uploadNotes = async (req, res) => {
         if (err) console.error("Error deleting file:", err);
       });
 
+      // Push notification to ntfy
+      pushNotificationToNtfy(`New Notes Uploaded`, `Title: ${title}\nUploader: ${req.session.user.username}\nPending admin approval.`);
       return sendResponse('success');
       
     } catch (err) {

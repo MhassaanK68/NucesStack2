@@ -2,31 +2,33 @@ const sequelize = require('../config/db');
 const initModels = require('../models/init-models');
 const models = initModels(sequelize);
 
+const pushNotificationToNtfy = require("../utils/notify").pushNotificationToNtfy;
+
 function getDriveFileId(url) {
-    // Regex to match Google Drive file links and extract FILE_ID
-    const regex = /https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?id=)([a-zA-Z0-9_-]+)(?:\/view|\?.*)?/;
+  // Regex to match Google Drive file links and extract FILE_ID
+  const regex = /https:\/\/drive\.google\.com\/(?:file\/d\/|uc\?id=)([a-zA-Z0-9_-]+)(?:\/view|\?.*)?/;
 
-    const match = url.match(regex);
+  const match = url.match(regex);
 
-    if (match) {
-        return match[1]; // Extracted FILE_ID
-    } else {
-        return false; // Not a valid Google Drive file link
-    }
+  if (match) {
+    return match[1]; // Extracted FILE_ID
+  } else {
+    return false; // Not a valid Google Drive file link
+  }
 }
 
-function isValidYouTubeLink(url) {
-    // Regex to match YouTube video links
-    const regex = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?].*)?$/;
+function getYouTubeVideoId(url) {
+  const regex = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?].*)?$/;
 
-    const match = url.match(regex);
+  const match = url.match(regex);
 
-    if (match) {
-        return true; // Valid YouTube link
-    } else {
-        return false; // Not a valid YouTube link
-    }
+  if (match) {
+    return match[1]; 
+  } else {
+    return null; 
+  }
 }
+
 
 const adminController = {
   // Get all semesters
@@ -47,32 +49,32 @@ const adminController = {
   getSubjects: async (req, res) => {
     try {
       const semester_id = req.query.semester_id || req.query.semester; // Support both parameter names
-      
+
       if (!semester_id) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false,
-          error: 'semester_id parameter is required' 
+          error: 'semester_id parameter is required'
         });
       }
-      
+
       const subjects = await models.subjects.findAll({
         where: { semester_id },
         attributes: [
-          'id', 
-          'name', 
-          'slug', 
+          'id',
+          'name',
+          'slug',
           'semester_id',
           [sequelize.literal('(SELECT COUNT(*) FROM notes WHERE notes.subject_id = subjects.id)'), 'notesCount']
         ],
         order: [['name', 'ASC']]
       });
-      
+
       res.json(subjects);
     } catch (error) {
       console.error('Error fetching subjects:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
-        error: 'Failed to fetch subjects' 
+        error: 'Failed to fetch subjects'
       });
     }
   },
@@ -81,20 +83,25 @@ const adminController = {
   addSubject: async (req, res) => {
     try {
       const { name, semester_id } = req.body;
-      
+
       if (!name || !semester_id) {
         return res.status(400).json({ error: 'Subject name and semester_id are required' });
       }
 
       // Create slug from name
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      
+
       const subject = await models.subjects.create({
         name,
         slug,
         semester_id
       });
-      
+
+      pushNotificationToNtfy(
+        'Subject Added',
+        `Subject "${name}" (Semester ID: ${semester_id}) was added.`
+      );
+
       res.json(subject);
     } catch (error) {
       console.error('Error creating subject:', error);
@@ -106,12 +113,16 @@ const adminController = {
   deleteSubject: async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       const deleted = await models.subjects.destroy({
         where: { id }
       });
-      
+
       if (deleted) {
+        pushNotificationToNtfy(
+          'Subject Deleted',
+          `Subject with ID ${id} was deleted.`
+        );
         res.json({ message: 'Subject deleted successfully' });
       } else {
         res.status(404).json({ error: 'Subject not found' });
@@ -142,7 +153,7 @@ const adminController = {
   addNote: async (req, res) => {
     try {
       const { title, subject_id, semester_id, description = '', pdf_id = '', video_id = '' } = req.body;
-      
+
       if (!title || !subject_id) {
         return res.status(400).json({ error: 'Title and subject_id are required' });
       }
@@ -150,13 +161,18 @@ const adminController = {
       let NoteID;
 
       if (pdf_id !== '') {
-          NoteID = getDriveFileId(pdf_id);
-          console.log(NoteID)
-          if (NoteID === false) {
-              return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
-          }
+        NoteID = getDriveFileId(pdf_id);
+        if (NoteID === false) {
+          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+        }
       }
 
+      if (video_id !== '') {
+        videoID = getYouTubeVideoId(video_id);
+        if (videoID === null) {
+          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+        }
+      }
 
       const note = await models.notes.create({
         title,
@@ -164,12 +180,15 @@ const adminController = {
         subject_id,
         semester_id,
         pdf_id: NoteID,
-        video_id,
+        video_id: videoID,
         approved: true,
         uploader: req.session.user ? req.session.user.username : 'anonymous'
       });
-      
-      console
+
+      pushNotificationToNtfy(
+        'Note Added',
+        `Note "${title}" (Subject ID: ${subject_id}, Semester ID: ${semester_id}) was added.`
+      );
 
       res.json(note);
     } catch (error) {
@@ -182,12 +201,16 @@ const adminController = {
   deleteNote: async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       const deleted = await models.notes.destroy({
         where: { id }
       });
-      
+
       if (deleted) {
+        pushNotificationToNtfy(
+          'Note Deleted',
+          `Note with ID ${id} was deleted.`
+        );
         res.json({ message: 'Note deleted successfully' });
       } else {
         res.status(404).json({ error: 'Note not found' });
@@ -202,29 +225,29 @@ const adminController = {
   getNotesCount: async (req, res) => {
     try {
       const { semester_id } = req.query;
-      
+
       if (!semester_id) {
         console.log('Missing semester_id in query parameters');
         return res.status(400).json({ error: 'semester_id is required' });
       }
-      
+
       console.log(`Fetching notes count for semester_id: ${semester_id}`);
-      
+
       // Verify database connection
       await sequelize.authenticate();
       console.log('Database connection established successfully');
-      
+
       // Get the count of notes for the semester
       const count = await models.notes.count({
-        where: { 
-          semester_id: parseInt(semester_id), 
-          approved: true 
+        where: {
+          semester_id: parseInt(semester_id),
+          approved: true
         }
       });
-      
+
       console.log(`Found ${count} notes for semester ${semester_id}`);
       return res.json({ count });
-      
+
     } catch (error) {
       console.error('Error in getNotesCount:', {
         message: error.message,
@@ -232,9 +255,9 @@ const adminController = {
         query: req.query,
         error: error.original ? error.original.message : 'No original error'
       });
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Failed to fetch notes count',
-        details: error.message 
+        details: error.message
       });
     }
   },
@@ -246,7 +269,7 @@ const adminController = {
         attributes: ['id', 'title', 'description', 'pdf_id', 'video_id', 'uploader', 'semester_id', 'subject_id'],
         order: [['id', 'ASC']]
       });
-      res.status(200).json({ notes }); 
+      res.status(200).json({ notes });
     } catch (error) {
       console.error('Error fetching pending notes:', error);
       res.status(500).json({ error: 'Failed to fetch pending notes' });
@@ -257,7 +280,13 @@ const adminController = {
     try {
       const { id } = req.params;
       await models.notes.update({ approved: true }, { where: { id } });
-      res.status(200).json({message: "note has been approved & pushed to DB"})
+
+      pushNotificationToNtfy(
+        'Note Approved',
+        `Note with ID ${id} was approved.`
+      );
+
+      res.status(200).json({ message: "note has been approved & pushed to DB" })
     } catch (error) {
       console.error('Error approving note:', error);
       res.status(500).json({ error: 'Failed to approve note' });
@@ -268,12 +297,18 @@ const adminController = {
     try {
       const { id } = req.params;
       const note = await models.notes.findByPk(id);
-      
+
       if (!note) {
         return res.status(404).json({ error: 'Note not found' });
       }
 
       await note.destroy();
+
+      pushNotificationToNtfy(
+        'Note Denied',
+        `Note with ID ${id} was denied and deleted.`
+      );
+
       res.json({ message: 'Note denied and deleted successfully' });
     } catch (error) {
       console.error('Error denying note:', error);
@@ -311,34 +346,48 @@ const adminController = {
       res.status(500).json({ error: 'Failed to fetch note' });
     }
   },
-  
+
   // Update an existing note
   updateNote: async (req, res) => {
     try {
       const { id } = req.params;
       const { title, description, pdf_id, video_id } = req.body;
-      
+
       if (!title) {
         return res.status(400).json({ error: 'Title is required' });
       }
-      
+
       // Find the note first to ensure it exists
       const note = await models.notes.findByPk(id);
       if (!note) {
         return res.status(404).json({ error: 'Note not found' });
       }
-      
+
+      if (pdf_id !== '') {
+        NoteID = getDriveFileId(pdf_id);
+        if (NoteID === false) {
+          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+        }
+      }
+
+      if (video_id !== '') {
+        videoID = getYouTubeVideoId(video_id);
+        if (videoID === null) {
+          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+        }
+      }
+
       // Prepare update data
-      const updateData = { 
-        title, 
+      const updateData = {
+        title,
         description: description || '',
-        pdf_id: pdf_id || null,
-        video_id: video_id || null
+        pdf_id: NoteID || null,
+        video_id: VideoID || null
       };
-      
+
       // Update the note
       await note.update(updateData);
-      
+
       // Fetch the updated note with subject info
       const updatedNote = await models.notes.findByPk(id, {
         include: [
@@ -349,15 +398,20 @@ const adminController = {
           }
         ]
       });
-      
+
       // Format the response
       const responseData = updatedNote.get({ plain: true });
       if (responseData.subject) {
         responseData.subject_name = responseData.subject.name;
       }
-      
+
+      pushNotificationToNtfy(
+        'Note Updated',
+        `Note "${title}" (ID: ${id}) was updated.`
+      );
+
       res.json(responseData);
-      
+
     } catch (error) {
       console.error('Error updating note:', error);
       res.status(500).json({ error: 'Failed to update note' });
