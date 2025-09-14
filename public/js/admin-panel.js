@@ -347,9 +347,6 @@ function toast(message, type = "success", timeout = 5000) {
   return hideToast;
 }
 
-// ConfirmModal component is now loaded from external file
-// See: /public/js/components/ConfirmModal.js
-
 
 
 // --- State management ---
@@ -434,13 +431,6 @@ async function renderSubjectsList() {
   subjectList.querySelectorAll(".delete-sub").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.getAttribute("data-id");
-      
-      // Show confirmation dialog
-      const confirmed = await confirmDialog("Are you sure you want to delete this subject? This action cannot be undone.");
-      if (!confirmed) {
-        return;
-      }
-      
       try {
         await deleteSubject(id);
         await loadSubjectsForSemester();
@@ -1070,6 +1060,29 @@ addNoteBtn.addEventListener("click", async () => {
   }
 });
 
+removeNoteSubject.addEventListener("change", async () => {
+  await fillNotesForSubject(removeNoteSubject.value, removeNoteSelect);
+});
+
+removeNoteBtn.addEventListener("click", async () => {
+  const sid = removeNoteSubject.value;
+  const nid = removeNoteSelect.value;
+  if (!sid || !nid) return;
+
+  setButtonLoading("removeNoteBtn", true);
+  try {
+    await deleteNote(nid);
+    // Clear cached notes for this subject
+    delete state.subjectNotes[sid];
+    await loadSubjectsForSemester();
+    await fillNotesForSubject(sid, removeNoteSelect);
+    toast("Notes have been removed");
+  } catch (error) {
+    toast("Something went wrong trying to remove notes", "error");
+  } finally {
+    setButtonLoading("removeNoteBtn", false);
+  }
+});
 // Set up event listener for subject dropdown in remove notes section
 const removeNoteSubjectEl = document.getElementById('removeNoteSubject');
 if (removeNoteSubjectEl && !removeNoteSubjectEl.hasAttribute('data-event-bound')) {
@@ -1204,12 +1217,6 @@ function renderPendingNotes(notes) {
 
   container.querySelectorAll('.deny-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      // Show confirmation dialog
-      const confirmed = await confirmDialog("Are you sure you want to deny this note? This will permanently delete it from the database.");
-      if (!confirmed) {
-        return;
-      }
-      
       btn.disabled = true;
       const id = btn.getAttribute('data-id');
       const success = await denyNote(id);
