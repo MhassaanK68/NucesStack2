@@ -7,7 +7,7 @@ function generateAccessToken(user) {
   return jwt.sign(
     {id: user.id, username: user.username, role: user.role }, 
     ACCESS_SECRET, 
-    { expiresIn: "1m" }
+    { expiresIn: "5m" }
   );
 }
 
@@ -15,7 +15,7 @@ function generateRefreshToken(user) {
   return jwt.sign(
     {id: user.id, username: user.username, role: user.role }, 
     REFRESH_SECRET, 
-    { expiresIn: "7d" }
+    { expiresIn: "1d" }
   );
 }
 
