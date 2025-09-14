@@ -318,11 +318,15 @@ app.post('/api/subjects', authenticateToken,adminController.addSubject);
 app.delete('/api/subjects/:id', authenticateToken,adminController.deleteSubject);
 app.get('/api/subjects/:id/notes', authenticateToken,adminController.getNotesBySubject);
 app.post('/api/notes', authenticateToken,adminController.addNote);
+app.get('/api/notes/:id', authenticateToken, adminController.getNoteById);      // ← Missing
+app.put('/api/notes/:id', authenticateToken, adminController.updateNote);       // ← Missing
 app.delete('/api/notes/:id', authenticateToken,adminController.deleteNote);
-app.get('/api/notes/count', authenticateToken,adminController.getNotesCount);
-app.get('/api/pending-notes', authenticateToken,adminController.getPendingNotes); 
+app.get('/api/get-notes-count', authenticateToken,adminController.getNotesCount);
+app.get('/api/pending-notes', authenticateToken,adminController.getPendingNotes);
 app.post('/admin/approve-note/:id', authenticateToken,adminController.approveNote);
 app.post('/admin/deny-note/:id', authenticateToken,adminController.denyNote);
+
+
 app.post('/contribute/upload-your-notes', upload.single('file'), contributorsController.uploadNotes);
 
 

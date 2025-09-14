@@ -18,16 +18,85 @@ function getDriveFileId(url) {
 }
 
 function getYouTubeVideoId(url) {
-  const regex = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?].*)?$/;
-
-  const match = url.match(regex);
-
-  if (match) {
-    return match[1]; 
-  } else {
-    return null; 
+  // Comprehensive YouTube URL validation regex
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)(\/.*)?$/;
+  if (!youtubeRegex.test(url)) {
+    return null;
   }
+  
+  let videoId = null;
+  
+  // Handle various YouTube URL formats
+  
+  // 1. Standard format: youtube.com/watch?v=VIDEO_ID
+  if (url.includes("v=")) {
+    const vIndex = url.indexOf("v=") + 2;
+    const endIndex = url.indexOf("&", vIndex);
+    if (endIndex === -1) {
+      videoId = url.substring(vIndex);
+    } else {
+      videoId = url.substring(vIndex, endIndex);
+    }
+  }
+  // 2. Short format: youtu.be/VIDEO_ID
+  else if (url.includes("youtu.be/")) {
+    const idIndex = url.indexOf("youtu.be/") + 9;
+    const endIndex = url.indexOf("?", idIndex);
+    if (endIndex === -1) {
+      videoId = url.substring(idIndex);
+    } else {
+      videoId = url.substring(idIndex, endIndex);
+    }
+  }
+  // 3. Embed format: youtube.com/embed/VIDEO_ID
+  else if (url.includes("/embed/")) {
+    const idIndex = url.indexOf("/embed/") + 7;
+    const endIndex = url.indexOf("?", idIndex);
+    if (endIndex === -1) {
+      videoId = url.substring(idIndex);
+    } else {
+      videoId = url.substring(idIndex, endIndex);
+    }
+  }
+  // 4. Live stream format: youtube.com/live/VIDEO_ID
+  else if (url.includes("/live/")) {
+    const idIndex = url.indexOf("/live/") + 6;
+    const endIndex = url.indexOf("?", idIndex);
+    if (endIndex === -1) {
+      videoId = url.substring(idIndex);
+    } else {
+      videoId = url.substring(idIndex, endIndex);
+    }
+  }
+  // 5. Shorts format: youtube.com/shorts/VIDEO_ID
+  else if (url.includes("/shorts/")) {
+    const idIndex = url.indexOf("/shorts/") + 8;
+    const endIndex = url.indexOf("?", idIndex);
+    if (endIndex === -1) {
+      videoId = url.substring(idIndex);
+    } else {
+      videoId = url.substring(idIndex, endIndex);
+    }
+  }
+  
+  // Additional validation for the extracted video ID
+  if (!videoId) {
+    return null;
+  }
+  
+  // Remove any trailing slashes or invalid characters
+  videoId = videoId.split('/')[0].split('?')[0].split('#')[0];
+  
+  // YouTube video IDs are typically 11 characters, but can vary
+  // For live streams and some other formats, they might be different
+  if (videoId.length < 10 || videoId.length > 20) {
+    return null;
+  }
+  
+  return videoId;
 }
+
+
 
 
 const adminController = {
@@ -98,8 +167,8 @@ const adminController = {
       });
 
       pushNotificationToNtfy(
-        'Subject Added',
-        `Subject "${name}" (Semester ID: ${semester_id}) was added.`
+        'NUCES Stack',
+        `New Subject "${name}" Added in Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(subject);
@@ -120,8 +189,8 @@ const adminController = {
 
       if (deleted) {
         pushNotificationToNtfy(
-          'Subject Deleted',
-          `Subject with ID ${id} was deleted.`
+        'NUCES Stack',
+        `Subject ID ${id} of Semester ${semester_id} was deleted.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
         );
         res.json({ message: 'Subject deleted successfully' });
       } else {
@@ -160,17 +229,21 @@ const adminController = {
 
       let NoteID;
 
-      if (pdf_id !== '') {
+      if (pdf_id && pdf_id !== null) {
         NoteID = getDriveFileId(pdf_id);
         if (NoteID === false) {
           return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
         }
       }
 
-      if (video_id !== '') {
+
+      console.log("video_id:", video_id);
+
+      let videoID = '';
+      if (video_id && video_id !== '') {
         videoID = getYouTubeVideoId(video_id);
         if (videoID === null) {
-          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+          return res.status(400).json({ error: 'Video link must be a Youtube Video link' });
         }
       }
 
@@ -186,8 +259,8 @@ const adminController = {
       });
 
       pushNotificationToNtfy(
-        'Note Added',
-        `Note "${title}" (Subject ID: ${subject_id}, Semester ID: ${semester_id}) was added.`
+        'NUCES Stack',
+        `New notes "${title}" added in Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(note);
@@ -208,8 +281,8 @@ const adminController = {
 
       if (deleted) {
         pushNotificationToNtfy(
-          'Note Deleted',
-          `Note with ID ${id} was deleted.`
+        'NUCES Stack',
+        `Notes "${title}" were deleted from Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
         );
         res.json({ message: 'Note deleted successfully' });
       } else {
@@ -235,7 +308,6 @@ const adminController = {
 
       // Verify database connection
       await sequelize.authenticate();
-      console.log('Database connection established successfully');
 
       // Get the count of notes for the semester
       const count = await models.notes.count({
@@ -282,8 +354,8 @@ const adminController = {
       await models.notes.update({ approved: true }, { where: { id } });
 
       pushNotificationToNtfy(
-        'Note Approved',
-        `Note with ID ${id} was approved.`
+        'NUCES Stack',
+        `Note ID "${id}" has been approved.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.status(200).json({ message: "note has been approved & pushed to DB" })
@@ -305,8 +377,8 @@ const adminController = {
       await note.destroy();
 
       pushNotificationToNtfy(
-        'Note Denied',
-        `Note with ID ${id} was denied and deleted.`
+        'NUCES Stack',
+        `Note ID "${id}" has been disapproved.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json({ message: 'Note denied and deleted successfully' });
@@ -320,6 +392,11 @@ const adminController = {
   getNoteById: async (req, res) => {
     try {
       const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({ error: 'Missing ID search parameter!' });
+      }
+
       const note = await models.notes.findByPk(id, {
         include: [
           {
@@ -357,23 +434,26 @@ const adminController = {
         return res.status(400).json({ error: 'Title is required' });
       }
 
+      let NoteID = null;
+      let VideoID = null;
+
       // Find the note first to ensure it exists
       const note = await models.notes.findByPk(id);
       if (!note) {
         return res.status(404).json({ error: 'Note not found' });
       }
 
-      if (pdf_id !== '') {
+      if (pdf_id && pdf_id !== null) {
         NoteID = getDriveFileId(pdf_id);
         if (NoteID === false) {
           return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
         }
       }
 
-      if (video_id !== '') {
-        videoID = getYouTubeVideoId(video_id);
-        if (videoID === null) {
-          return res.status(400).json({ error: 'Notes link must be a Google Drive link' });
+      if (video_id && video_id !== null) {
+        VideoID = getYouTubeVideoId(video_id);
+        if (VideoID === null) {
+          return res.status(400).json({ error: 'Video link must be a Youtube Video link' });
         }
       }
 
@@ -401,13 +481,10 @@ const adminController = {
 
       // Format the response
       const responseData = updatedNote.get({ plain: true });
-      if (responseData.subject) {
-        responseData.subject_name = responseData.subject.name;
-      }
 
       pushNotificationToNtfy(
-        'Note Updated',
-        `Note "${title}" (ID: ${id}) was updated.`
+        'NUCES Stack',
+        `Note "${title}" were updated.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(responseData);

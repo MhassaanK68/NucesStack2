@@ -1,6 +1,6 @@
-/* =========================
+/* ===================
    Token management & network helpers
-   ========================= */
+   =================== */
 
 // global State for jwt token
 let accessToken = null;          
@@ -123,7 +123,7 @@ async function apiFetch(url, options = {}) {
   }
 
   // If unauthorized, try refresh once and retry
-  if (response.status === 403) {
+  if (response.status == 403) {
     try {
       await refreshAccessToken();
     } catch (err) {
@@ -146,7 +146,7 @@ async function apiFetch(url, options = {}) {
 async function apiJson(url, options = {}) {
   const res = await apiFetch(url, options);
   // If no content (204), return null
-  if (res.status === 204) return null;
+  if (res.status == 204) return null;
 
   // Try parse JSON safely
   let data;
@@ -171,9 +171,9 @@ async function apiJson(url, options = {}) {
 
 
 
-/* =========================
+/* ===================
    UI: toasts, loading buttons 
-   ========================= */
+   =================== */
 
 // Show/hide controller (same as before)
 function toast(message, type = "success", timeout = 3000) {
@@ -226,9 +226,9 @@ function setButtonLoading(buttonId, isLoading) {
   }
 }
 
-/* =========================
+/* ====================
    App state & DOM refs 
-   ========================= */
+   =================== */
 
 let state = {
   semesters: [],
@@ -249,13 +249,13 @@ const notePdfId = document.getElementById("notePdfId");
 const noteVideoId = document.getElementById("noteVideoId");
 const addNoteBtn = document.getElementById("addNoteBtn");
 
+const notesListContainer = document.getElementById("notesListContainer");
 const removeNoteSubject = document.getElementById("removeNoteSubject");
-const removeNoteSelect = document.getElementById("removeNoteSelect");
-const removeNoteBtn = document.getElementById("removeNoteBtn");
 
-/* =========================
+
+/* ===================
    API wrappers (use apiJson)
-   ========================= */
+   =================== */
 
 async function fetchSemesters() {
   try {
@@ -295,7 +295,7 @@ async function fetchNotesForSubject(subjectId) {
 async function fetchNotesCount(semesterId) {
   if (!semesterId) return 0;
   try {
-    const data = await apiJson(`/api/notes/count?semester_id=${encodeURIComponent(semesterId)}`, { method: "GET" });
+    const data = await apiJson(`/api/get-notes-count?semester_id=${encodeURIComponent(semesterId)}`, { method: "GET" });
     return Number(data?.count || 0);
   } catch (err) {
     console.error("Error fetching notes count:", err);
@@ -404,14 +404,14 @@ async function denyNote(id) {
   }
 }
 
-/* =========================
+/* ===================
    Rendering & Helpers (keeps original logic, using secured APIs)
-   ========================= */
+   =================== */
 
 function fillSemesterSelect() {
   if (!semesterSelect) return;
   semesterSelect.innerHTML = "";
-  if (!Array.isArray(state.semesters) || state.semesters.length === 0) {
+  if (!Array.isArray(state.semesters) || state.semesters.length == 0) {
     semesterSelect.innerHTML = '<option value="">No semesters found</option>';
     return;
   }
@@ -496,27 +496,364 @@ function fillSubjectSelect(el) {
 }
 
 async function fillNotesForSubject(subjectId, el) {
-  if (!el) return;
-  el.innerHTML = "";
+  const notesTableBody = document.getElementById('notesTableBody');
+  const notesListContainer = document.getElementById('notesListContainer');
+  const noNotesMessage = document.getElementById('noNotesMessage');
+  
+  // Clear existing notes
+  notesTableBody.innerHTML = "";
+  
   if (!subjectId) {
     notesListContainer.classList.add('hidden');
     noNotesMessage.classList.add('hidden');
     return;
   }
 
-  if (!state.subjectNotes[subjectId]) {
-    state.subjectNotes[subjectId] = await fetchNotesForSubject(subjectId);
-  }
+  try {
+    // Show loading state
+    notesListContainer.classList.remove('hidden');
+    noNotesMessage.classList.add('hidden');
+    notesTableBody.innerHTML = `
+      <tr>
+        <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">
+          Loading notes...
+        </td>
+      </tr>`;
+    
+    // Load notes for this subject if not cached
+    if (!state.subjectNotes[subjectId]) {
+      state.subjectNotes[subjectId] = await fetchNotesForSubject(subjectId);
+    }
 
-  const notes = state.subjectNotes[subjectId] || [];
-  el.innerHTML = '<option value="">Select Note</option>';
-  notes.forEach((n) => {
-    const opt = document.createElement("option");
-    opt.value = n.id;
-    opt.textContent = n.title;
-    el.appendChild(opt);
+    const notes = state.subjectNotes[subjectId];
+    
+    if (notes.length == 0) {
+      notesListContainer.classList.add('hidden');
+      noNotesMessage.classList.remove('hidden');
+      noNotesMessage.textContent = 'No notes found for this subject.';
+      return;
+    }
+    
+    // Clear the loading state
+    notesTableBody.innerHTML = "";
+    
+    // Show the notes list and hide the no notes message
+    notesListContainer.classList.remove('hidden');
+    noNotesMessage.classList.add('hidden');
+    
+    // Render notes in the table
+    notes.forEach((note) => {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-gray-50 border-b border-gray-200';
+      row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-indigo-100 rounded-md">
+              <i data-lucide="file-text" class="w-5 h-5 text-indigo-600"></i>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-900">${note.title || 'Untitled Note'}</div>
+              <div class="text-xs text-gray-500">
+                ${note.description ? note.description.substring(0, 50) + (note.description.length > 50 ? '...' : '') : 'No description'}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+          <button class="edit-note inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" data-note-id="${note.id}">
+            <i data-lucide="pencil" class="w-5 h-5"></i>
+          </button>
+          <button class="delete-note inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" data-note-id="${note.id}" data-note-title="${note.title || 'this note'}">
+            <i data-lucide="trash-2" class="w-5 h-5"></i>
+          </button>
+        </td>
+      `;
+      notesTableBody.appendChild(row);
+    });
+    
+    // Initialize Lucide icons for the new elements
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+    
+    // Set up event listeners for edit and delete 
+    setupNoteActionHandlers();
+    
+  } catch (error) {
+    console.error('Error loading notes:', error);
+    notesListContainer.classList.add('hidden');
+    noNotesMessage.classList.remove('hidden');
+    noNotesMessage.textContent = 'Failed to load notes. Please try again.';
+    toast('Failed to load notes', 'error');
+  }
+}
+
+function setupNoteActionHandlers() {
+  // Remove any existing event listeners first to prevent duplicates
+  document.querySelectorAll('.edit-note').forEach(button => {
+    button.replaceWith(button.cloneNode(true));
+  });
+  
+  document.querySelectorAll('.delete-note').forEach(button => {
+    button.replaceWith(button.cloneNode(true));
+  });
+  
+  // Edit note button click handler
+  document.querySelectorAll('.edit-note').forEach(button => {
+    button.addEventListener('click', handleEditNote);
+  });
+  
+  // Delete note button click handler
+  document.querySelectorAll('.delete-note').forEach(button => {
+    button.addEventListener('click', handleDeleteNoteClick);
   });
 }
+
+async function handleEditNote(event) {
+  try {
+    const button = event.currentTarget;
+    const noteId = button.dataset.noteId;
+    const subjectId = document.getElementById('removeNoteSubject').value;
+    
+    // Show loading state on the button
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i data-lucide="loader" class="w-3 h-3 mr-1 animate-spin"></i> Loading...';
+    if (window.lucide) lucide.createIcons();
+    
+    // Find the note in the current subject's notes
+    const notes = state.subjectNotes[subjectId] || [];
+    let note = notes.find(n => n.id == noteId);
+    
+    // If note not found in cache, try to fetch it
+    if (!note) {
+      try {
+        await apiJson(`/api/notes/${noteId}`);
+      } catch (error) {
+        console.error('Error fetching note:', error);
+        toast('Failed to load note details', 'error');
+        return;
+      } finally {
+        // Reset button state
+        button.disabled = false;
+        button.innerHTML = originalContent;
+        if (window.lucide) lucide.createIcons();
+      }
+    } else {
+      // Reset button state immediately if we have the note
+      button.disabled = false;
+      button.innerHTML = originalContent;
+    }
+    
+    if (!note) {
+      toast('Note not found', 'error');
+      return;
+    }
+    
+    // Fill the edit form with note data
+    document.getElementById('editNoteId').value = note.id;
+    document.getElementById('editNoteTitle').value = note.title || '';
+    document.getElementById('editNoteDescription').value = note.description || '';
+    
+    // Show PDF and Video IDs as full URLs if present instead of raw IDs
+
+    if (note.pdf_id){
+      document.getElementById('editNotePdfId').value = `https://drive.google.com/file/d/${note.pdf_id}/view`;
+    }
+    else{
+      document.getElementById('editNotePdfId').value = '';
+    }
+    
+
+    if(note.video_id){
+      document.getElementById('editNoteVideoId').value = `https://youtube.com/watch?v=${note.video_id}`;
+    }
+    else{
+      document.getElementById('editNoteVideoId').value = '';
+    }
+    
+    // Show the edit modal
+    document.getElementById('editNoteModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Focus on the title field for better UX
+    setTimeout(() => {
+      const titleField = document.getElementById('editNoteTitle');
+      if (titleField) titleField.focus();
+    }, 100);
+    
+  } catch (error) {
+    console.error('Error in handleEditNote:', error);
+    toast('An error occurred while loading the note', 'error');
+  }
+}
+
+async function handleDeleteNoteClick(event) {
+  try {
+    const button = event.currentTarget;
+    const noteId = button.dataset.noteId;
+    const noteTitle = button.dataset.noteTitle || 'this note';
+    
+    // Show loading state on the button
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i data-lucide="loader" class="w-3 h-3 mr-1 animate-spin"></i>';
+    if (window.lucide) lucide.createIcons();
+   
+    const confirm = await confirmDialog(`Are you sure you want to delete "${noteTitle}"? This action cannot be undone.`); 
+   
+    if (confirm) {
+      await deleteNote(noteId);
+
+      // Show success and refresh notes list
+      toast('Note deleted successfully', 'success');
+      
+      const deletedNoteSubjectId = document.getElementById('removeNoteSubject').value;
+      state.subjectNotes[deletedNoteSubjectId] = state.subjectNotes[deletedNoteSubjectId].filter(n => n.id != noteId);
+      await fillNotesForSubject(deletedNoteSubjectId);
+
+
+      // Update subjects list to reflect note count change
+      if (state.selectedSemester) {
+        loadSubjectsForSemester();
+      }
+    } else {
+      // User cancelled, reset button state
+      setTimeout(() => {
+      button.disabled = false;
+      button.innerHTML = originalContent;
+      }, 100);
+    }
+    
+    
+  } catch (error) {
+    console.error('Error in handleDeleteNoteClick:', error);
+    toast('An error occurred while preparing to delete the note', 'error');
+    
+    // Make sure to reset the button state in case of error
+    const button = event.currentTarget;
+    button.disabled = false;
+    button.innerHTML = originalContent || '<i data-lucide="trash-2" class="w-3 h-3 mr-1"></i> Delete';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+async function saveNoteChanges() {
+  const saveButton = document.getElementById('saveNoteChanges');
+  if (!saveButton) {
+    console.error('Save button not found');
+    return;
+  }
+
+  // Save original button state
+  const originalButtonContent = saveButton.innerHTML;
+  
+  try {
+    const noteId = document.getElementById('editNoteId')?.value;
+    const title = document.getElementById('editNoteTitle')?.value.trim();
+    const description = document.getElementById('editNoteDescription')?.value.trim() || '';
+    const pdfId = document.getElementById('editNotePdfId')?.value.trim() || '';
+    const videoId = document.getElementById('editNoteVideoId')?.value.trim() || '';
+    const subjectId = document.getElementById('removeNoteSubject')?.value;
+    
+    if (!noteId || !title || !subjectId) {
+      toast('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    // Set loading state
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>';
+    if (window.lucide) lucide.createIcons();
+    
+    // Prepare update data
+    const updateData = { 
+      title, 
+      description,
+      pdf_id: pdfId || null,
+      video_id: videoId || null
+    };
+    
+    // Send update request
+    const response = await apiJson(`/api/notes/${noteId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updateData)
+    });
+    
+    const updatedNote = response;
+    
+    // Update local state
+    if (state.subjectNotes[subjectId]) {
+      const noteIndex = state.subjectNotes[subjectId].findIndex(n => n.id == noteId);
+      if (noteIndex !== -1) {
+        state.subjectNotes[subjectId][noteIndex] = {
+          ...state.subjectNotes[subjectId][noteIndex],
+          ...updatedNote
+        };
+      }
+    }
+    
+    // Show success and update UI
+    toast('Note updated successfully', 'success');
+    
+    // Reset button state before closing modal
+    saveButton.disabled = false;
+    saveButton.innerHTML = 'Save Changes';
+    if (window.lucide) lucide.createIcons();
+    
+    // Close modal and refresh notes
+    closeEditModal();
+    await fillNotesForSubject(subjectId);
+    
+  } catch (error) {
+    console.error('Error updating note:', error);
+    toast(error.message || 'Failed to update note', 'error');
+    
+    // Reset button state on error
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i> Try Again';
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('editNoteModal');
+  if (!modal) return;
+  
+  // Hide the modal
+  modal.classList.add('hidden');
+  document.body.style.overflow = 'auto'; // Re-enable scrolling
+  
+  // Reset the form
+  const form = document.getElementById('editNoteForm');
+  if (form) {
+    form.reset();
+  }
+  
+  // Clear any error messages
+  const errorMessages = document.querySelectorAll('.error-message');
+  errorMessages.forEach(el => el.textContent = '');
+  
+  // Reset the save button state
+  const saveButton = document.getElementById('saveNoteChanges');
+  if (saveButton) {
+    saveButton.disabled = false;
+    saveButton.innerHTML = 'Save Changes';
+    if (window.lucide) lucide.createIcons();
+  }
+  
+  // Clear any temporary data
+  if (window.editNoteData) {
+    delete window.editNoteData;
+  } else {
+    // Initialize counters even when no semester is selected
+    updateStatsCounters();
+  }
+}
+
 
 async function loadInitialData() {
   try {
@@ -573,9 +910,9 @@ async function updateStatsCounters() {
   }
 }
 
-/* =========================
+/* ===================
    Event handlers
-   ========================= */
+   =================== */
 
 if (semesterSelect) {
   semesterSelect.addEventListener("change", async () => {
@@ -588,6 +925,9 @@ if (semesterSelect) {
     }
   });
 }
+
+  // Save note changes when clicking the save button
+  document.getElementById('saveNoteChanges').addEventListener('click', saveNoteChanges);
 
 if (addSubjectBtn) {
   addSubjectBtn.addEventListener("click", async () => {
@@ -642,34 +982,18 @@ if (addNoteBtn) {
 
 if (removeNoteSubject) {
   removeNoteSubject.addEventListener("change", async () => {
-    await fillNotesForSubject(removeNoteSubject.value, removeNoteSelect);
+    await fillNotesForSubject(removeNoteSubject.value, notesListContainer);
   });
 }
 
-if (removeNoteBtn) {
-  removeNoteBtn.addEventListener("click", async () => {
-    const sid = removeNoteSubject.value;
-    const nid = removeNoteSelect.value;
-    if (!sid || !nid) return;
-
-    const confirmed = await confirmDialog("Are you sure you want to delete this note? This action cannot be undone.");
-    if (!confirmed) return;
-
-    setButtonLoading("removeNoteBtn", true);
-    try {
-      await deleteNote(nid);
-      delete state.subjectNotes[sid];
-      await loadSubjectsForSemester();
-      await fillNotesForSubject(sid, removeNoteSelect);
-      toast("Notes have been removed");
-    } catch (error) {
-      console.error("Remove note failed:", error);
-      toast("Something went wrong trying to remove notes", "error");
-    } finally {
-      setButtonLoading("removeNoteBtn", false);
-    }
-  });
+if (document.getElementById('closeEditModal')) {
+  document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
 }
+
+if (document.getElementById('cancelEditNote')) {
+  document.getElementById('cancelEditNote').addEventListener('click', closeEditModal);
+}      
+
 
 /* Pending notes rendering using secured APIs */
 async function renderPendingNotes() {
@@ -750,13 +1074,13 @@ async function renderPendingNotes() {
   });
 }
 
-/* =========================
+/* ===============
    Misc helpers
-   ========================= */
+   ============== */
 
 // Simple HTML escape to avoid XSS when injecting strings
 function escapeHtml(str) {
-  if (str === null || str === undefined) return "";
+  if (str == null || str == undefined) return "";
   return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -765,9 +1089,9 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
-/* =========================
+/* ==============
    Initial UI behavior (tabs, etc.) - preserve your original code
-   ========================= */
+   ============== */
 document.addEventListener("DOMContentLoaded", function () {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabContents = document.querySelectorAll(".tab-content");
@@ -786,7 +1110,7 @@ document.addEventListener("DOMContentLoaded", function () {
       button.classList.remove("text-gray-600");
       button.classList.add("color-primary");
       document.getElementById(targetTab).classList.add("active");
-      if (targetTab === "approve") {
+      if (targetTab == "approve") {
         const semSelect = document.getElementById('semSelect');
         if (semSelect) semSelect.style.display = 'none';
       } else {
@@ -796,13 +1120,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // Close modals on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeEditModal();
+      closeDeleteModal();
+    }
+  });
+
   const initial = document.querySelector('[data-tab="overview"]');
   if (initial) initial.classList.add("border-color-primary");
 });
 
-/* =========================
+/* ===================
    Kick off initial data load
-   ========================= */
+   =================== */
 
 (async function init() {
   // Make sure session is valid & token fetched; load UI data afterwards
