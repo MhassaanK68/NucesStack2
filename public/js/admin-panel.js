@@ -1,179 +1,202 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const tabButtons = document.querySelectorAll(".tab-button");
-  const tabContents = document.querySelectorAll(".tab-content");
+/* =========================
+   Token management & network helpers
+   ========================= */
 
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const targetTab = button.getAttribute("data-tab");
+// global State for jwt token
+let accessToken = null;          
+// holds other requests while a jwt token refresh is ongoing
+let isRefreshing = false;
+// holds the refresh promise to ensure single refresh at a time        
+let refreshPromise = null;       
+// timeout for fetch requests
+const REQUEST_TIMEOUT = 30000;   
 
-      // Remove active class from all buttons and contents
-      tabButtons.forEach((btn) => {
-        btn.classList.remove("active", "border-color-primary");
-        btn.classList.add("text-gray-600");
+async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+}
+
+async function fetchAccessToken() {
+  try {
+    const res = await fetchWithTimeout("/api/token", {
+      method: "GET",
+      credentials: "include", // ensures cookie (session) is sent
+      headers: { "Accept": "application/json" }
+    });
+
+    if (!res.ok) {
+      // Session probably expired or not logged in
+      toast("Session expired. Redirecting to login...", "error", 5000);
+      setTimeout(() => (window.location.href = "/login"), 1200);
+    }
+
+    const data = await res.json();
+    if (!data || !data.accessToken) throw new Error("No access token in response");
+    accessToken = data.accessToken;
+    return accessToken;
+  } catch (err) {
+    console.error("fetchAccessToken error:", err);
+    accessToken = null;
+    toast("Session expired. Redirecting to login...", "error", 5000);
+    // Small delay so user sees message
+    setTimeout(() => (window.location.href = "/login"), 1200);
+    throw err;
+  }
+}
+
+async function refreshAccessToken() {
+  if (isRefreshing) {
+    // Another call is already doing a refresh: return the promise
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetchWithTimeout("/api/refresh", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Accept": "application/json" }
       });
-      tabContents.forEach((content) => {
-        content.classList.remove("active");
-      });
 
-      // Add active class to clicked button and corresponding content
-      button.classList.add("active", "border-color-primary");
-      button.classList.remove("text-gray-600");
-      button.classList.add("color-primary");
-      document.getElementById(targetTab).classList.add("active");
-      if (targetTab === "approve") {
-        document.getElementById('semSelect').style.display = 'none';
-      }else{
-        document.getElementById('semSelect').style.display = 'block';
+      if (!res.ok) {
+        toast("Session expired. Redirecting to login...", "error", 5000);
+        setTimeout(() => (window.location.href = "/login"), 1200);
       }
-    });
-  });
 
-  // Initialize with overview tab active
-  document
-    .querySelector('[data-tab="overview"]')
-    .classList.add("border-color-primary");
-});
+      const data = await res.json();
+      if (!data || !data.accessToken) throw new Error("Invalid refresh response");
+      accessToken = data.accessToken;
+      return accessToken;
+    } catch (err) {
+      console.error("refreshAccessToken error:", err);
+      accessToken = null;
+      toast("Session expired. Redirecting to login...", "error", 5000);
+      setTimeout(() => (window.location.href = "/login"), 1200);
+      throw err;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
 
-// --- Loading state management ---
-function setButtonLoading(buttonId, isLoading) {
-  const button = document.getElementById(buttonId);
-  const spinner = button.querySelector(".loading-spinner");
-  const text = button.querySelector(".btn-text");
-
-  if (isLoading) {
-    button.classList.add("btn-loading");
-    spinner.style.display = "inline-block";
-    text.style.display = "none";
-  } else {
-    button.classList.remove("btn-loading");
-    spinner.style.display = "none";
-    text.style.display = "block";
-  }
+  return refreshPromise;
 }
 
-// --- API functions ---
-async function fetchSemesters() {
+// Main API fetch wrapper with automatic token handling
+async function apiFetch(url, options = {}) {
+  // Ensure we always send cookies (refresh token & session)
+  const baseOptions = {
+    credentials: "include",
+    ...options
+  };
+
+  // Lazy-get access token if not present
+  if (!accessToken) {
+    await fetchAccessToken(); // will redirect to login if fails
+  }
+
+  const attachAuth = (opts) => {
+    const h = { ...(opts.headers || {}) };
+    if (accessToken) h["Authorization"] = `Bearer ${accessToken}`;
+    // default Accept header
+    if (!h["Accept"]) h["Accept"] = "application/json";
+    return { ...opts, headers: h };
+  };
+
+  // Do the request
+  let response;
   try {
-    const response = await fetch("/api/semesters");
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching semesters:", error);
-    return [];
+    response = await fetchWithTimeout(url, attachAuth(baseOptions));
+  } catch (err) {
+    // network/timeout
+    console.error("Network or timeout error in apiFetch:", err);
+    throw err;
   }
+
+  // If unauthorized, try refresh once and retry
+  if (response.status === 403) {
+    try {
+      await refreshAccessToken();
+    } catch (err) {
+      throw err;
+    }
+
+    // Retry the request once with new token
+    try {
+      response = await fetchWithTimeout(url, attachAuth(baseOptions));
+    } catch (err) {
+      console.error("Network error on retry in apiFetch:", err);
+      throw err;
+    }
+  }
+
+  return response;
 }
 
-async function fetchSubjects(semesterId = null) {
+// JSON-specific fetch with error handling
+async function apiJson(url, options = {}) {
+  const res = await apiFetch(url, options);
+  // If no content (204), return null
+  if (res.status === 204) return null;
+
+  // Try parse JSON safely
+  let data;
   try {
-    const url = semesterId
-      ? `/api/subjects?semester_id=${semesterId}`
-      : "/api/subjects";
-    const response = await fetch(url);
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching subjects:", error);
-    return [];
+    data = await res.json();
+  } catch (err) {
+    console.error("Invalid JSON response for", url, err);
+    throw new Error("Invalid JSON response from server");
   }
+
+  if (!res.ok) {
+    // Standard error surface: use message from server if present
+    const message = data && (data.error || data.message) ? (data.error || data.message) : `Request failed with status ${res.status}`;
+    const err = new Error(message);
+    err.status = res.status;
+    err.payload = data;
+    throw err;
+  }
+
+  return data;
 }
 
-async function fetchNotesForSubject(subjectId) {
-  try {
-    const response = await fetch(`/api/subjects/${subjectId}/notes`);
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching notes:", error);
-    return [];
-  }
-}
 
-async function fetchNotesCount(semesterId) {
-  try {
-    const response = await fetch(`/api/notes/count?semester_id=${semesterId}`);
-    const data = await response.json();
-    return data.count || 0;
-  } catch (error) {
-    console.error("Error fetching notes count:", error);
-    return 0;
-  }
-}
 
-async function addSubject(name, semesterId) {
-  try {
-    const response = await fetch("/api/subjects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, semester_id: semesterId }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Error adding subject:", error);
-    throw error;
-  }
-}
+/* =========================
+   UI: toasts, loading buttons 
+   ========================= */
 
-async function deleteSubject(id) {
-  try {
-    const response = await fetch(`/api/subjects/${id}`, {
-      method: "DELETE",
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Error deleting subject:", error);
-    throw error;
-  }
-}
-
-async function addNote(title, subjectId, description, pdfId, videoId) {
-  try {
-    const response = await fetch("/api/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        subject_id: subjectId,
-        description,
-        pdf_id: pdfId,
-        video_id: videoId,
-        semester_id: state.selectedSemester,
-      }),
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Error adding note:", error);
-    throw error;
-  }
-}
-
-async function deleteNote(id) {
-  try {
-    const response = await fetch(`/api/notes/${id}`, {
-      method: "DELETE",
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Error deleting note:", error);
-    throw error;
-  }
-}
-
-// Show/hide controller (no custom CSS needed)
+// Show/hide controller (same as before)
 function toast(message, type = "success", timeout = 3000) {
   const wrapper = document.getElementById("toast");
   const panel = document.getElementById("toast-panel");
   const icon = document.getElementById("toast-icon");
   const msg = document.getElementById("toast-message");
 
+  if (!wrapper || !panel || !msg || !icon) {
+    // fallback to alert if UI missing
+    alert(message);
+    return;
+  }
+
   msg.textContent = message;
-  // swap icon color by type
   icon.classList.remove("text-green-400", "text-red-400");
   icon.classList.add(type === "error" ? "text-red-400" : "text-green-400");
 
-  // reveal + animate in
   wrapper.classList.remove("hidden");
   requestAnimationFrame(() => {
     panel.classList.remove("translate-y-6", "sm:-translate-y-6", "opacity-0");
   });
 
-  // auto-hide
   clearTimeout(panel._hideTimer);
   panel._hideTimer = setTimeout(() => {
     panel.classList.add("opacity-0", "translate-y-6", "sm:-translate-y-6");
@@ -181,20 +204,37 @@ function toast(message, type = "success", timeout = 3000) {
   }, timeout);
 }
 
-// ConfirmModal component is now loaded from external file
-// See: /public/js/components/ConfirmModal.js
+// Loading state helper
+function setButtonLoading(buttonId, isLoading) {
+  const button = document.getElementById(buttonId);
+  if (!button) return;
+  const spinner = button.querySelector(".loading-spinner");
+  const text = button.querySelector(".btn-text");
 
+  if (isLoading) {
+    button.classList.add("btn-loading");
+    if (spinner) spinner.style.display = "inline-block";
+    if (text) text.style.display = "none";
+    button.disabled = true;
+  } else {
+    button.classList.remove("btn-loading");
+    if (spinner) spinner.style.display = "none";
+    if (text) text.style.display = "block";
+    button.disabled = false;
+  }
+}
 
+/* =========================
+   App state & DOM refs 
+   ========================= */
 
-// --- State management ---
 let state = {
   semesters: [],
   subjects: [],
-  subjectNotes: {}, // Cache notes for each subject
+  subjectNotes: {}, // cache notes per subject
   selectedSemester: null,
 };
 
-// --- DOM refs ---
 const semesterSelect = document.getElementById("semesterSelect");
 const subjectName = document.getElementById("subjectName");
 const addSubjectBtn = document.getElementById("addSubjectBtn");
@@ -211,10 +251,164 @@ const removeNoteSubject = document.getElementById("removeNoteSubject");
 const removeNoteSelect = document.getElementById("removeNoteSelect");
 const removeNoteBtn = document.getElementById("removeNoteBtn");
 
-// --- Render helpers ---
+/* =========================
+   API wrappers (use apiJson)
+   ========================= */
+
+async function fetchSemesters() {
+  try {
+    const data = await apiJson("/api/semesters", { method: "GET" });
+    return Array.isArray(data) ? data : (data?.semesters || []);
+  } catch (err) {
+    console.error("Error fetching semesters:", err);
+    toast("Could not load semesters.", "error");
+    return [];
+  }
+}
+
+async function fetchSubjects(semesterId = null) {
+  try {
+    const url = semesterId ? `/api/subjects?semester_id=${encodeURIComponent(semesterId)}` : "/api/subjects";
+    const data = await apiJson(url, { method: "GET" });
+    return Array.isArray(data) ? data : (data?.subjects || []);
+  } catch (err) {
+    console.error("Error fetching subjects:", err);
+    toast("Could not load subjects.", "error");
+    return [];
+  }
+}
+
+async function fetchNotesForSubject(subjectId) {
+  if (!subjectId) return [];
+  try {
+    const data = await apiJson(`/api/subjects/${encodeURIComponent(subjectId)}/notes`, { method: "GET" });
+    return Array.isArray(data) ? data : (data?.notes || []);
+  } catch (err) {
+    console.error("Error fetching notes for subject:", err);
+    toast("Could not load notes for subject.", "error");
+    return [];
+  }
+}
+
+async function fetchNotesCount(semesterId) {
+  if (!semesterId) return 0;
+  try {
+    const data = await apiJson(`/api/notes/count?semester_id=${encodeURIComponent(semesterId)}`, { method: "GET" });
+    return Number(data?.count || 0);
+  } catch (err) {
+    console.error("Error fetching notes count:", err);
+    return 0;
+  }
+}
+
+async function addSubject(name, semesterId) {
+  if (!name || !semesterId) throw new Error("Missing fields for addSubject");
+  try {
+    const data = await apiJson("/api/subjects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, semester_id: semesterId })
+    });
+    return data;
+  } catch (err) {
+    console.error("Error adding subject:", err);
+    throw err;
+  }
+}
+
+async function deleteSubject(id) {
+  if (!id) throw new Error("Missing id for deleteSubject");
+  try {
+    const data = await apiJson(`/api/subjects/${encodeURIComponent(id)}`, {
+      method: "DELETE"
+    });
+    return data;
+  } catch (err) {
+    console.error("Error deleting subject:", err);
+    throw err;
+  }
+}
+
+async function addNote(title, subjectId, description, pdfId, videoId) {
+  if (!title || !subjectId) throw new Error("Missing required fields for addNote");
+  try {
+    const payload = {
+      title,
+      subject_id: subjectId,
+      description: description || null,
+      pdf_id: pdfId || null,
+      video_id: videoId || null,
+      semester_id: state.selectedSemester
+    };
+    const data = await apiJson("/api/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return data;
+  } catch (err) {
+    console.error("Error adding note:", err);
+    throw err;
+  }
+}
+
+async function deleteNote(id) {
+  if (!id) throw new Error("Missing note id for deleteNote");
+  try {
+    const data = await apiJson(`/api/notes/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return data;
+  } catch (err) {
+    console.error("Error deleting note:", err);
+    throw err;
+  }
+}
+
+/* Pending notes moderation */
+async function fetchPendingNotes() {
+  try {
+    const data = await apiJson("/api/pending-notes", { method: "GET" });
+    return Array.isArray(data) ? data : (data?.pending || []);
+  } catch (err) {
+    console.error("Error fetching pending notes:", err);
+    toast("Could not load pending notes.", "error");
+    return [];
+  }
+}
+
+async function approveNote(id) {
+  if (!id) return false;
+  try {
+    const res = await apiFetch(`/admin/approve-note/${encodeURIComponent(id)}`, { method: "POST" });
+    if (!res.ok) throw new Error("Approval failed");
+    return true;
+  } catch (err) {
+    console.error("approveNote error:", err);
+    toast("Approval failed.", "error");
+    return false;
+  }
+}
+
+async function denyNote(id) {
+  if (!id) return false;
+  try {
+    const res = await apiFetch(`/admin/deny-note/${encodeURIComponent(id)}`, { method: "POST" });
+    if (!res.ok) throw new Error("Denial failed");
+    return true;
+  } catch (err) {
+    console.error("denyNote error:", err);
+    toast("Denial failed.", "error");
+    return false;
+  }
+}
+
+/* =========================
+   Rendering & Helpers (keeps original logic, using secured APIs)
+   ========================= */
+
 function fillSemesterSelect() {
+  if (!semesterSelect) return;
   semesterSelect.innerHTML = "";
-  if (state.semesters.length === 0) {
+  if (!Array.isArray(state.semesters) || state.semesters.length === 0) {
     semesterSelect.innerHTML = '<option value="">No semesters found</option>';
     return;
   }
@@ -235,51 +429,46 @@ function fillSemesterSelect() {
 }
 
 async function renderSubjectsList() {
+  if (!subjectList) return;
   subjectList.innerHTML = "";
   if (!state.selectedSemester) {
-    subjectList.innerHTML =
-      '<li class="text-center text-slate-500 py-4">Please select a semester first</li>';
+    subjectList.innerHTML = '<li class="text-center text-slate-500 py-4">Please select a semester first</li>';
     return;
   }
 
   state.subjects.forEach((sub) => {
     const notesCount = sub.notesCount || 0;
     const li = document.createElement("li");
-    li.className =
-      "flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200";
+    li.className = "flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200";
     li.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="h-8 w-8 rounded-lg bg-sky-100 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
-              </svg>
-            </div>
-            <div>
-              <div class="font-medium text-slate-800">${sub.name}</div>
-              <div class="text-xs text-slate-500">${notesCount} notes</div>
-            </div>
-          </div>
-          <button data-id="${sub.id}" class="delete-sub px-3 py-1.5 rounded-lg bg-color-primary hover:bg-color-light-primary text-white text-sm">Remove</button>
-        `;
+      <div class="flex items-center gap-3">
+        <div class="h-8 w-8 rounded-lg bg-sky-100 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m12 14 9-5-9-5-9 5 9 5Z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-medium text-slate-800">${escapeHtml(sub.name)}</div>
+          <div class="text-xs text-slate-500">${notesCount} notes</div>
+        </div>
+      </div>
+      <button data-id="${encodeURIComponent(sub.id)}" class="delete-sub px-3 py-1.5 rounded-lg bg-color-primary hover:bg-color-light-primary text-white text-sm">Remove</button>
+    `;
     subjectList.appendChild(li);
   });
 
   // bind delete
   subjectList.querySelectorAll(".delete-sub").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.getAttribute("data-id");
-      
-      // Show confirmation dialog
+      const id = decodeURIComponent(e.currentTarget.getAttribute("data-id"));
       const confirmed = await confirmDialog("Are you sure you want to delete this subject? This action cannot be undone.");
-      if (!confirmed) {
-        return;
-      }
-      
+      if (!confirmed) return;
       try {
         await deleteSubject(id);
         await loadSubjectsForSemester();
         toast("Subject has been removed!");
       } catch (error) {
+        console.error("Delete subject failed:", error);
         toast("Something went wrong trying to remove a subject", "error");
       }
     });
@@ -287,6 +476,7 @@ async function renderSubjectsList() {
 }
 
 function fillSubjectSelect(el) {
+  if (!el) return;
   el.innerHTML = "";
   if (!state.selectedSemester) {
     el.innerHTML = '<option value="">Select semester first</option>';
@@ -303,18 +493,18 @@ function fillSubjectSelect(el) {
 }
 
 async function fillNotesForSubject(subjectId, el) {
+  if (!el) return;
   el.innerHTML = "";
   if (!subjectId) {
     el.innerHTML = '<option value="">Select subject first</option>';
     return;
   }
 
-  // Load notes for this subject if not cached
   if (!state.subjectNotes[subjectId]) {
     state.subjectNotes[subjectId] = await fetchNotesForSubject(subjectId);
   }
 
-  const notes = state.subjectNotes[subjectId];
+  const notes = state.subjectNotes[subjectId] || [];
   el.innerHTML = '<option value="">Select Note</option>';
   notes.forEach((n) => {
     const opt = document.createElement("option");
@@ -325,13 +515,19 @@ async function fillNotesForSubject(subjectId, el) {
 }
 
 async function loadInitialData() {
-  state.semesters = await fetchSemesters();
-  fillSemesterSelect();
-  if (state.selectedSemester) {
-    await loadSubjectsForSemester();
-  } else {
-    // Initialize counters even when no semester is selected
-    updateStatsCounters();
+  try {
+    // Attempt to fetch access token (makes sure user session is valid and sets accessToken)
+    if (!accessToken) await fetchAccessToken();
+    state.semesters = await fetchSemesters();
+    fillSemesterSelect();
+    if (state.selectedSemester) {
+      await loadSubjectsForSemester();
+    } else {
+      updateStatsCounters();
+    }
+  } catch (err) {
+    // fetchAccessToken handles redirect; if we're here, show a quiet message
+    console.warn("loadInitialData aborted:", err);
   }
 }
 
@@ -341,6 +537,7 @@ async function loadSubjectsForSemester() {
   await render();
 }
 
+// Initial Render
 async function render() {
   await renderSubjectsList();
   fillSubjectSelect(noteSubject);
@@ -348,154 +545,133 @@ async function render() {
   await updateStatsCounters();
 }
 
-// Update stats counters in the overview section
 async function updateStatsCounters() {
   const totalSubjectsEl = document.getElementById('totalSubjects');
   const totalNotesEl = document.getElementById('totalNotes');
   const activeSemesterEl = document.getElementById('activeSemester');
-  
-  if (totalSubjectsEl) {
-    totalSubjectsEl.textContent = state.subjects.length;
+
+  if (totalSubjectsEl) totalSubjectsEl.textContent = state.subjects.length;
+  if (totalNotesEl) {
+    if (state.selectedSemester) {
+      const notesCount = await fetchNotesCount(state.selectedSemester);
+      totalNotesEl.textContent = notesCount;
+    } else {
+      totalNotesEl.textContent = '0';
+    }
   }
-  
-  if (totalNotesEl && state.selectedSemester) {
-    const notesCount = await fetchNotesCount(state.selectedSemester);
-    totalNotesEl.textContent = notesCount;
-  } else if (totalNotesEl) {
-    totalNotesEl.textContent = '0';
-  }
-  
-  if (activeSemesterEl && state.selectedSemester) {
-    const selectedSemester = state.semesters.find(s => s.id == state.selectedSemester);
-    activeSemesterEl.textContent = selectedSemester ? selectedSemester.name : '-';
-  } else if (activeSemesterEl) {
-    activeSemesterEl.textContent = '-';
-  }
-}
-
-// --- Event handlers ---
-semesterSelect.addEventListener("change", async () => {
-  state.selectedSemester = semesterSelect.value;
-  if (state.selectedSemester) {
-    await loadSubjectsForSemester();
-  } else {
-    state.subjects = [];
-    await render();
-  }
-});
-
-addSubjectBtn.addEventListener("click", async () => {
-  const name = subjectName.value.trim();
-  if (!name) return toast("Enter a subject name", "error");
-  if (!state.selectedSemester) return toast("Select a semester first", "error");
-
-  setButtonLoading("addSubjectBtn", true);
-  try {
-    await addSubject(name, state.selectedSemester);
-    subjectName.value = "";
-    await loadSubjectsForSemester();
-    toast("Subject has been added!");
-  } catch (error) {
-    toast("Somewthing went wrong trying to add a subject", "error");
-  } finally {
-    setButtonLoading("addSubjectBtn", false);
-  }
-});
-
-addNoteBtn.addEventListener("click", async () => {
-  const sid = noteSubject.value;
-  const title = noteTitle.value.trim();
-  const description = noteDescription.value.trim();
-  const pdfId = notePdfId.value.trim();
-  const videoId = noteVideoId.value.trim();
-
-  if (!sid) return toast("Please select a subject!", "error");
-  if (!title) return toast("Please enter a note title", "error");
-
-  setButtonLoading("addNoteBtn", true);
-  try {
-    await addNote(title, sid, description, pdfId, videoId);
-    noteTitle.value = "";
-    noteDescription.value = "";
-    notePdfId.value = "";
-    noteVideoId.value = "";
-    // Clear cached notes for this subject
-    delete state.subjectNotes[sid];
-    await loadSubjectsForSemester();
-    toast("Notes have been added!");
-  } catch (error) {
-    toast("Something went wrong trying to add notes!", "error");
-  } finally {
-    setButtonLoading("addNoteBtn", false);
-  }
-});
-
-removeNoteSubject.addEventListener("change", async () => {
-  await fillNotesForSubject(removeNoteSubject.value, removeNoteSelect);
-});
-
-removeNoteBtn.addEventListener("click", async () => {
-  const sid = removeNoteSubject.value;
-  const nid = removeNoteSelect.value;
-  if (!sid || !nid) return;
-
-  // Show confirmation dialog
-  const confirmed = await confirmDialog("Are you sure you want to delete this note? This action cannot be undone.");
-  if (!confirmed) {
-    return;
-  }
-
-  setButtonLoading("removeNoteBtn", true);
-  try {
-    await deleteNote(nid);
-    // Clear cached notes for this subject
-    delete state.subjectNotes[sid];
-    await loadSubjectsForSemester();
-    await fillNotesForSubject(sid, removeNoteSelect);
-    toast("Notes have been removed");
-  } catch (error) {
-    toast("Something went wrong trying to remove notes", "error");
-  } finally {
-    setButtonLoading("removeNoteBtn", false);
-  }
-});
-
-// --- Pending Notes Approval ---
-async function fetchPendingNotes() {
-  try {
-    const response = await fetch('/api/pending-notes');
-    if (!response.ok) throw new Error('Failed to fetch pending notes');
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return [];
+  if (activeSemesterEl) {
+    if (state.selectedSemester) {
+      const selectedSemester = state.semesters.find(s => s.id == state.selectedSemester);
+      activeSemesterEl.textContent = selectedSemester ? selectedSemester.name : '-';
+    } else {
+      activeSemesterEl.textContent = '-';
+    }
   }
 }
 
-async function approveNote(id) {
-  try {
-    const response = await fetch(`/admin/approve-note/${id}`, { method: 'POST' });
-    if (!response.ok) throw new Error('Failed to approve note');
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
+/* =========================
+   Event handlers
+   ========================= */
+
+if (semesterSelect) {
+  semesterSelect.addEventListener("change", async () => {
+    state.selectedSemester = semesterSelect.value;
+    if (state.selectedSemester) {
+      await loadSubjectsForSemester();
+    } else {
+      state.subjects = [];
+      await render();
+    }
+  });
 }
 
-async function denyNote(id) {
-  try {
-    const response = await fetch(`/admin/deny-note/${id}`, { method: 'POST' });
-    if (!response.ok) throw new Error('Failed to deny note');
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
+if (addSubjectBtn) {
+  addSubjectBtn.addEventListener("click", async () => {
+    const name = subjectName.value?.trim();
+    if (!name) return toast("Enter a subject name", "error");
+    if (!state.selectedSemester) return toast("Select a semester first", "error");
+
+    setButtonLoading("addSubjectBtn", true);
+    try {
+      await addSubject(name, state.selectedSemester);
+      subjectName.value = "";
+      await loadSubjectsForSemester();
+      toast("Subject has been added!");
+    } catch (error) {
+      console.error("Add subject failed:", error);
+      toast("Something went wrong trying to add a subject", "error");
+    } finally {
+      setButtonLoading("addSubjectBtn", false);
+    }
+  });
 }
 
-function renderPendingNotes(notes) {
+if (addNoteBtn) {
+  addNoteBtn.addEventListener("click", async () => {
+    const sid = noteSubject.value;
+    const title = noteTitle.value?.trim();
+    const description = noteDescription.value?.trim();
+    const pdfId = notePdfId.value?.trim();
+    const videoId = noteVideoId.value?.trim();
+
+    if (!sid) return toast("Please select a subject!", "error");
+    if (!title) return toast("Please enter a note title", "error");
+
+    setButtonLoading("addNoteBtn", true);
+    try {
+      await addNote(title, sid, description, pdfId, videoId);
+      noteTitle.value = "";
+      noteDescription.value = "";
+      notePdfId.value = "";
+      noteVideoId.value = "";
+      delete state.subjectNotes[sid]; // clear cached notes
+      await loadSubjectsForSemester();
+      toast("Notes have been added!");
+    } catch (error) {
+      console.error("Add note failed:", error);
+      toast("Something went wrong trying to add notes!", "error");
+    } finally {
+      setButtonLoading("addNoteBtn", false);
+    }
+  });
+}
+
+if (removeNoteSubject) {
+  removeNoteSubject.addEventListener("change", async () => {
+    await fillNotesForSubject(removeNoteSubject.value, removeNoteSelect);
+  });
+}
+
+if (removeNoteBtn) {
+  removeNoteBtn.addEventListener("click", async () => {
+    const sid = removeNoteSubject.value;
+    const nid = removeNoteSelect.value;
+    if (!sid || !nid) return;
+
+    const confirmed = await confirmDialog("Are you sure you want to delete this note? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setButtonLoading("removeNoteBtn", true);
+    try {
+      await deleteNote(nid);
+      delete state.subjectNotes[sid];
+      await loadSubjectsForSemester();
+      await fillNotesForSubject(sid, removeNoteSelect);
+      toast("Notes have been removed");
+    } catch (error) {
+      console.error("Remove note failed:", error);
+      toast("Something went wrong trying to remove notes", "error");
+    } finally {
+      setButtonLoading("removeNoteBtn", false);
+    }
+  });
+}
+
+/* Pending notes rendering using secured APIs */
+async function renderPendingNotes() {
+  const notes = await fetchPendingNotes();
   const container = document.getElementById('pendingNotesList');
+  if (!container) return;
   container.innerHTML = '';
 
   if (!notes.length) {
@@ -507,92 +683,126 @@ function renderPendingNotes(notes) {
     const card = document.createElement('div');
     card.className = 'bg-white border rounded-lg p-4 shadow flex flex-col gap-2';
 
-    card.innerHTML = `
-    <div class="bg-transparent border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-      <div class="space-y-3">
+    // safe output via escapeHtml
+    const uploader = escapeHtml(note.uploader || 'Anonymous');
+    const title = escapeHtml(note.title || 'Untitled');
+    const description = escapeHtml(note.description || 'No description provided');
+    const pdfLink = note.pdf_id ? `<a href="https://drive.google.com/file/d/${encodeURIComponent(note.pdf_id)}/view" target="_blank" class="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors">View PDF</a>` : '';
 
-        <div class="space-y-2">
-          <h4 class="font-semibold text-lg text-gray-900 leading-tight">${note.title}</h4>
-          <p class="text-sm text-gray-600 leading-relaxed">${note.description || 'No description provided'}</p>
-        </div>
-        
-        <div class="flex items-center justify-between text-base text-gray-500 pt-2 border-t border-gray-100">
-          <span class="flex items-center gap-1">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-            </svg>
-            ${note.uploader || 'Anonymous'}
-          </span>
-          ${note.pdf_id ? `
-            <a href="https://drive.google.com/file/d/${note.pdf_id}/view" target="_blank" 
-              class="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors">
-              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+    card.innerHTML = `
+      <div class="bg-transparent border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+        <div class="space-y-3">
+          <div class="space-y-2">
+            <h4 class="font-semibold text-lg text-gray-900 leading-tight">${title}</h4>
+            <p class="text-sm text-gray-600 leading-relaxed">${description}</p>
+          </div>
+          <div class="flex items-center justify-between text-base text-gray-500 pt-2 border-t border-gray-100">
+            <span class="flex items-center gap-1">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
               </svg>
-              View PDF
-            </a>
-          ` : ''}
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="flex gap-2 pt-3">
-          <button class="approve-btn flex-1 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm font-medium hover:bg-green-100 hover:border-green-300 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" 
-                  data-id="${note.id}">
-            Approve
-          </button>
-          <button class="deny-btn flex-1 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1" 
-                  data-id="${note.id}">
-            Deny
-          </button>
+              ${uploader}
+            </span>
+            ${pdfLink}
+          </div>
+          <div class="flex gap-2 pt-3">
+            <button class="approve-btn flex-1 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm font-medium hover:bg-green-100 hover:border-green-300 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1" data-id="${encodeURIComponent(note.id)}">Approve</button>
+            <button class="deny-btn flex-1 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-md text-sm font-medium hover:bg-red-100 hover:border-red-300 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1" data-id="${encodeURIComponent(note.id)}">Deny</button>
+          </div>
         </div>
       </div>
-    </div>
     `;
-
     container.appendChild(card);
   });
 
-  // Add event listeners for approve/deny buttons
   container.querySelectorAll('.approve-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       btn.disabled = true;
-      const id = btn.getAttribute('data-id');
+      const id = decodeURIComponent(btn.getAttribute('data-id'));
       const success = await approveNote(id);
       if (success) {
         toast('Notes have been approved!');
         btn.closest('.bg-white').remove();
       } else {
         btn.disabled = false;
-        toast('Something went wrong trying to approve these notes.', "error");
       }
     });
   });
 
   container.querySelectorAll('.deny-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      // Show confirmation dialog
       const confirmed = await confirmDialog("Are you sure you want to deny this note? This will permanently delete it from the database.");
-      if (!confirmed) {
-        return;
-      }
-      
+      if (!confirmed) return;
       btn.disabled = true;
-      const id = btn.getAttribute('data-id');
+      const id = decodeURIComponent(btn.getAttribute('data-id'));
       const success = await denyNote(id);
       if (success) {
         toast('Notes have been disapproved!', "error");
         btn.closest('.bg-white').remove();
       } else {
         btn.disabled = false;
-        toast('Something went wrong trying to disapprove these notes.', "error");
       }
     });
   });
 }
 
+/* =========================
+   Misc helpers
+   ========================= */
 
+// Simple HTML escape to avoid XSS when injecting strings
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
+/* =========================
+   Initial UI behavior (tabs, etc.) - preserve your original code
+   ========================= */
+document.addEventListener("DOMContentLoaded", function () {
+  const tabButtons = document.querySelectorAll(".tab-button");
+  const tabContents = document.querySelectorAll(".tab-content");
 
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetTab = button.getAttribute("data-tab");
+      tabButtons.forEach((btn) => {
+        btn.classList.remove("active", "border-color-primary");
+        btn.classList.add("text-gray-600");
+      });
+      tabContents.forEach((content) => {
+        content.classList.remove("active");
+      });
+      button.classList.add("active", "border-color-primary");
+      button.classList.remove("text-gray-600");
+      button.classList.add("color-primary");
+      document.getElementById(targetTab).classList.add("active");
+      if (targetTab === "approve") {
+        const semSelect = document.getElementById('semSelect');
+        if (semSelect) semSelect.style.display = 'none';
+      } else {
+        const semSelect = document.getElementById('semSelect');
+        if (semSelect) semSelect.style.display = 'block';
+      }
+    });
+  });
 
-// init
-loadInitialData();
+  const initial = document.querySelector('[data-tab="overview"]');
+  if (initial) initial.classList.add("border-color-primary");
+});
+
+/* =========================
+   Kick off initial data load
+   ========================= */
+
+(async function init() {
+  // Make sure session is valid & token fetched; load UI data afterwards
+  await loadInitialData();
+  // Render pending notes
+  await renderPendingNotes();
+})();
