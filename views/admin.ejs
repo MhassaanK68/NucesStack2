@@ -546,14 +546,6 @@
 
             });
 
-            document.addEventListener('DOMContentLoaded', async function () {
-
-                if (document.getElementById('pendingNotesList')) {
-                    const notes = await fetchPendingNotes();
-                    renderPendingNotes(notes.notes);
-                }
-
-            });
         </script>
 
 

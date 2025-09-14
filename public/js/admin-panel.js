@@ -368,8 +368,9 @@ async function deleteNote(id) {
 /* Pending notes moderation */
 async function fetchPendingNotes() {
   try {
-    const data = await apiJson("/api/pending-notes", { method: "GET" });
-    return Array.isArray(data) ? data : (data?.pending || []);
+    let data = await apiJson("/api/pending-notes", { method: "GET" });
+    data = data.notes || [];
+    return data;
   } catch (err) {
     console.error("Error fetching pending notes:", err);
     toast("Could not load pending notes.", "error");
