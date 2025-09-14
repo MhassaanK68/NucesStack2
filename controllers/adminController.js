@@ -168,7 +168,7 @@ const adminController = {
 
       pushNotificationToNtfy(
         'NUCES Stack',
-        `New Subject "${name}" Added in Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `New Subject "${name}" Added in Semester ${semester_id}.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(subject);
@@ -190,7 +190,7 @@ const adminController = {
       if (deleted) {
         pushNotificationToNtfy(
         'NUCES Stack',
-        `Subject ID ${id} of Semester ${semester_id} was deleted.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Subject ID ${id} of Semester ${semester_id} was deleted.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
         );
         res.json({ message: 'Subject deleted successfully' });
       } else {
@@ -260,7 +260,7 @@ const adminController = {
 
       pushNotificationToNtfy(
         'NUCES Stack',
-        `New notes "${title}" added in Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `New notes "${title}" added in Semester ${semester_id}.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(note);
@@ -282,7 +282,7 @@ const adminController = {
       if (deleted) {
         pushNotificationToNtfy(
         'NUCES Stack',
-        `Notes "${title}" were deleted from Semester ${semester_id}.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Notes "${title}" were deleted from Semester ${semester_id}.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
         );
         res.json({ message: 'Note deleted successfully' });
       } else {
@@ -355,7 +355,7 @@ const adminController = {
 
       pushNotificationToNtfy(
         'NUCES Stack',
-        `Note ID "${id}" has been approved.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Note ID "${id}" has been approved.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.status(200).json({ message: "note has been approved & pushed to DB" })
@@ -378,7 +378,7 @@ const adminController = {
 
       pushNotificationToNtfy(
         'NUCES Stack',
-        `Note ID "${id}" has been disapproved.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Note ID "${id}" has been disapproved.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json({ message: 'Note denied and deleted successfully' });
@@ -484,7 +484,7 @@ const adminController = {
 
       pushNotificationToNtfy(
         'NUCES Stack',
-        `Note "${title}" were updated.\nBy ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Note "${title}" were updated.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
       );
 
       res.json(responseData);

@@ -6,7 +6,8 @@ function pushNotificationToNtfy(title, message) {
     method: 'POST',
     headers: {
       'Title': title,
-      'Content-Type': 'text/plain'
+      'Content-Type': 'text/plain',
+      'Click': 'https://nucesstack.site/admin'
     },
     body: message
   }).then(res => {
