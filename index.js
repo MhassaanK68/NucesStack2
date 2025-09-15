@@ -312,8 +312,8 @@ app.get('/view-notes', (req, res)=>{
 
 
 // Admin API routes
-app.get('/api/semesters', authenticateToken, adminController.getSemesters);
-app.get('/api/subjects', authenticateToken,adminController.getSubjects);
+app.get('/api/semesters', adminController.getSemesters);
+app.get('/api/subjects',adminController.getSubjects);
 app.post('/api/subjects', authenticateToken,adminController.addSubject);
 app.delete('/api/subjects/:id', authenticateToken,adminController.deleteSubject);
 app.get('/api/subjects/:id/notes', authenticateToken,adminController.getNotesBySubject);

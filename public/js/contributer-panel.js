@@ -1,5 +1,4 @@
-// API client will be available globally through window.apiClient
-// Make toast function globally available for API client
+// Make toast function globally available
 window.showToast = toast;
 
 let state = {
@@ -35,7 +34,6 @@ function fillSemesterSelect() {
         semesterSelect.appendChild(opt);
     });
 
-    // Auto-select first semester if none selected
     if (!state.selectedSemester && state.semesters.length > 0) {
         state.selectedSemester = state.semesters[0].id;
         semesterSelect.value = state.selectedSemester;
@@ -92,7 +90,6 @@ async function handleSemesterChange() {
     const semesterId = semesterSelect.value;
     state.selectedSemester = semesterId;
     
-    // Clear subjects when semester changes
     state.subjects = [];
     noteSubject.innerHTML = '<option value="">Loading subjects...</option>';
     
@@ -108,35 +105,26 @@ async function handleSemesterChange() {
     }
 }
 
-// Add event listener for semester change
 semesterSelect.addEventListener("change", handleSemesterChange);
 
 // --- Initialize ---
-// Wait for the API client to be available
 function initializeApp() {
-    if (window.apiClient) {
-        // Initialize with empty semester select
-        fillSemesterSelect();
-        
-        // Load semesters
-        loadInitialData().catch(error => {
-            console.error('Error in loadInitialData:', error);
-            toast('Failed to load initial data. Please refresh the page.', 'error');
-        });
-    } else {
-        // Try again after a short delay if apiClient isn't loaded yet
-        setTimeout(initializeApp, 100);
-    }
+    fillSemesterSelect();
+    loadInitialData().catch(error => {
+        console.error('Error in loadInitialData:', error);
+        toast('Failed to load initial data. Please refresh the page.', 'error');
+    });
 }
 
-// Start the app
 initializeApp();
 
-// --- API functions for notes ---
+// --- API functions (no JWT, plain fetch) ---
 async function fetchSemesters() {
     try {
-        // Use the global apiClient instance
-        state.semesters = await window.apiClient.get("/api/semesters");
+        const res = await fetch("/api/semesters");
+        if (!res.ok) throw new Error("Failed to fetch semesters");
+        const data = await res.json();
+        state.semesters = data;
         fillSemesterSelect();
         return state.semesters;
     } catch (error) {
@@ -149,8 +137,10 @@ async function fetchSemesters() {
 async function fetchSubjects(semesterId = null) {
     if (!semesterId) return [];
     try {
-        // Use the global apiClient instance
-        state.subjects = await window.apiClient.get(`/api/subjects?semester=${semesterId}`);
+        const res = await fetch(`/api/subjects?semester=${semesterId}`);
+        if (!res.ok) throw new Error("Failed to fetch subjects");
+        const data = await res.json();
+        state.subjects = data;
         fillSubjectSelect(noteSubject);
         return state.subjects;
     } catch (error) {
@@ -160,45 +150,7 @@ async function fetchSubjects(semesterId = null) {
     }
 }
 
-async function fetchNotesForSubject(subjectId) {
-    if (!subjectId) return [];
-    try {
-        return await apiClient.get(`/api/notes?subject=${subjectId}`);
-    } catch (error) {
-        console.error("Error fetching notes:", error);
-        toast("Failed to load notes. Please try again.", "error");
-        return [];
-    }
-}
-
-async function addNote(title, subjectId, description, pdfId) {
-    try {
-        return await apiClient.post("/api/notes", {
-            title,
-            subjectId,
-            description,
-            pdfId
-        });
-    } catch (error) {
-        console.error("Error adding note:", error);
-        throw error;
-    }
-}
-
-async function deleteNote(id) {
-    try {
-        await apiClient.delete(`/api/notes/${id}`);
-        return true;
-    } catch (error) {
-        console.error("Error deleting note:", error);
-        throw error;
-    }
-}
-
 // --- Helpers ---
-// Displays a temporary toast message to the user for feedback.
-// Usage: toast("Your message here");
-// Show/hide controller (no custom CSS needed)
 function toast(message, type = "success", timeout = 6000) {
   const wrapper = document.getElementById("toast");
   const panel = document.getElementById("toast-panel");
@@ -206,17 +158,14 @@ function toast(message, type = "success", timeout = 6000) {
   const msg = document.getElementById("toast-message");
 
   msg.textContent = message;
-  // swap icon color by type
   icon.classList.remove("text-green-400", "text-red-400");
   icon.classList.add(type === "error" ? "text-red-400" : "text-green-400");
 
-  // reveal + animate in
   wrapper.classList.remove("hidden");
   requestAnimationFrame(() => {
     panel.classList.remove("translate-y-6", "sm:-translate-y-6", "opacity-0");
   });
 
-  // auto-hide
   clearTimeout(panel._hideTimer);
   panel._hideTimer = setTimeout(() => {
     panel.classList.add("opacity-0", "translate-y-6", "sm:-translate-y-6");
@@ -224,15 +173,6 @@ function toast(message, type = "success", timeout = 6000) {
   }, timeout);
 }
 
-
-
-// Sets a button to a loading state by toggling visibility of spinner and text.
-// Expects the button to contain elements with classes 'loading-spinner' and 'btn-text'.
-// Example button HTML:
-// <button id="addNoteBtn">
-//   <span class="loading-spinner" style="display:none"></span>
-//   <span class="btn-text">Add Note</span>
-// </button>
 function setButtonLoading(buttonId, isLoading) {
     const button = document.getElementById(buttonId);
     const spinner = button.querySelector(".loading-spinner");
@@ -271,8 +211,6 @@ lockedBtns.forEach(btn => {
     });
 });
 
-
-
 // --- Fill notes dropdown ---
 async function fillNotesForSubject(subjectId, el) {
     el.innerHTML = "";
@@ -301,7 +239,6 @@ if (uploadForm) {
         const semesterId = semesterSelect?.value;
         const description = noteDescription?.value?.trim() || '';
         
-        // Basic validation
         if (!title || !subjectId || !semesterId || !fileInput?.files?.[0]) {
             toast("Please fill in all required fields and select a file", "error");
             return;
@@ -315,15 +252,10 @@ if (uploadForm) {
         formData.append('file', fileInput.files[0]);
         
         try {
-            // Show loading state
             setButtonLoading("addNoteBtn", true);
             
-            // Make the API request
             const response = await fetch('/contribute/upload-your-notes', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${window.apiClient?.token || ''}`
-                },
                 body: formData
             });
             
@@ -333,21 +265,16 @@ if (uploadForm) {
                 throw new Error(result.error || 'Failed to upload note');
             }
             
-            // Show success message
             toast(result.message || "Note uploaded successfully!", "success");
             
-            // Reset form
             uploadForm.reset();
             if (uploadContent) uploadContent.classList.remove("hidden");
             if (fileSelected) fileSelected.classList.add("hidden");
-            
-            // Stay on the same page after successful upload
             
         } catch (error) {
             console.error("Error submitting form:", error);
             toast(error.message || "Failed to upload note. Please try again.", "error");
         } finally {
-            // Reset loading state
             setButtonLoading("addNoteBtn", false);
         }
     });
