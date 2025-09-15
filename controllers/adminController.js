@@ -282,7 +282,7 @@ const adminController = {
       if (deleted) {
         pushNotificationToNtfy(
         'NUCES Stack',
-        `Note ID "${id}" were deleted from Semester ${semester_id}.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
+        `Note ID "${id}" were deleted.\nBy: ${req.session.user ? req.session.user.username : 'anonymous'}`
         );
         res.json({ message: 'Note deleted successfully' });
       } else {
