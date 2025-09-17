@@ -146,7 +146,7 @@ app.post('/login', async (req, res) => {
 
     if (!admin) {
       return res.status(401).render('login.ejs', { 
-        error: 'Invalid credentials' 
+        error: 'Username does not exist' 
       });
     }
 
@@ -154,6 +154,12 @@ app.post('/login', async (req, res) => {
     if (admin.password !== password) {
       return res.status(401).render('login.ejs', { 
         error: 'Invalid credentials' 
+      });
+    }
+
+    if (admin.role == "disabled"){
+      return res.status(403).render('login.ejs', { 
+        error: 'Due to inactivity your account has been disabled. Contact an Admin!' 
       });
     }
 
