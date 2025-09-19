@@ -141,7 +141,7 @@ app.post('/login', async (req, res) => {
 
     // Find admin by username (using email field as username)
     const admin = await models.admins.findOne({
-      where: { username: username }
+      where: { username: username.toLowerCase() }
     });
 
     if (!admin) {
@@ -151,7 +151,10 @@ app.post('/login', async (req, res) => {
     }
 
     // Compare password (assuming plain text for now - should be hashed in production)
-    if (admin.password !== password) {
+    console.log(admin.password)
+    console.log(password)
+
+    if (admin.password != password) {
       return res.status(401).render('login.ejs', { 
         error: 'Invalid credentials' 
       });
@@ -159,7 +162,7 @@ app.post('/login', async (req, res) => {
 
     if (admin.role == "disabled"){
       return res.status(403).render('login.ejs', { 
-        error: 'Due to inactivity your account has been disabled. Contact an Admin!' 
+        error: 'Due to inactivity your account has been disabled.' 
       });
     }
 
@@ -188,51 +191,6 @@ app.post('/logout', (req, res) => {
     res.redirect('/login');
   });
 })
-
-// POST login endpoint
-app.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).render('login.ejs', { 
-        error: 'Email and password are required' 
-      });
-    }
-
-    // Find admin by username (using email field as username)
-    const admin = await models.admins.findOne({
-      where: { username: email }
-    });
-
-    if (!admin) {
-      return res.status(401).render('login.ejs', { 
-        error: 'Invalid credentials' 
-      });
-    }
-
-    // Compare password (assuming plain text for now - should be hashed in production)
-    if (admin.password !== password) {
-      return res.status(401).render('login.ejs', { 
-        error: 'Invalid credentials' 
-      });
-    }
-
-    // Set session
-    req.session.user = {
-      id: admin.id,
-      username: admin.username
-    };
-
-    res.redirect('/admin');
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).render('login.ejs', { 
-      error: 'Login failed. Please try again.' 
-    });
-  }
-})
-
 
 // Specific Semester Page
 app.get('/u/:semesterSlug', async (req, res) => {

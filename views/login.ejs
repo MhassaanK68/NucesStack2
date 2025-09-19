@@ -23,7 +23,7 @@
                 <form method="POST" action="/login" class="mt-6 space-y-6 ">
                     <div class="space-y-4">
                         <%if (error) {%>
-                            <span class="text-red-500">Invalid Credentials</span>
+                            <span class="text-red-500"><%= error %></span>
                         <%}%>
                         <!-- Email Field -->
                         <div>
